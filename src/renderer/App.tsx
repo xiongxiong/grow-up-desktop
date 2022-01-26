@@ -1,50 +1,46 @@
-import { MemoryRouter as Router, Routes, Route } from 'react-router-dom';
-import icon from '../../assets/icon.svg';
-import './App.css';
+import { MemoryRouter as Router, Routes, Route } from "react-router-dom";
+import styled from "styled-components";
+import "./App.css";
+import Top from "./panels/top";
+import Bottom from "./panels/bottom";
+import Left from "./panels/left";
+import Right from "./panels/right";
+import Center from "./panels/center";
 
-const Hello = () => {
-  return (
-    <div>
-      <div className="Hello">
-        <img width="200px" alt="icon" src={icon} />
-      </div>
-      <h1>electron-react-boilerplate</h1>
-      <div className="Hello">
-        <a
-          href="https://electron-react-boilerplate.js.org/"
-          target="_blank"
-          rel="noreferrer"
-        >
-          <button type="button">
-            <span role="img" aria-label="books">
-              📚
-            </span>
-            Read our docs
-          </button>
-        </a>
-        <a
-          href="https://github.com/sponsors/electron-react-boilerplate"
-          target="_blank"
-          rel="noreferrer"
-        >
-          <button type="button">
-            <span role="img" aria-label="books">
-              🙏
-            </span>
-            Donate
-          </button>
-        </a>
-      </div>
-    </div>
-  );
+const Main = () => {
+    return (
+        <Container>
+            <Top />
+            <ContainerMiddle>
+                <Left />
+                <Center />
+                <Right />
+            </ContainerMiddle>
+            <Bottom />
+        </Container>
+    );
 };
 
-export default function App() {
-  return (
-    <Router>
-      <Routes>
-        <Route path="/" element={<Hello />} />
-      </Routes>
-    </Router>
-  );
-}
+const App = () => {
+    return (
+        <Router>
+            <Routes>
+                <Route path="/" element={<Main />} />
+            </Routes>
+        </Router>
+    );
+};
+
+export default App;
+
+const Container = styled.div`
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+`;
+
+const ContainerMiddle = styled.div`
+    flex: 1;
+    display: flex;
+    justify-content: center;
+`;
