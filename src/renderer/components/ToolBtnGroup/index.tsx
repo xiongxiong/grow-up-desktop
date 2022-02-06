@@ -1,7 +1,6 @@
-import { memo, useState } from "react";
+import { memo } from "react";
 import { IconType } from "react-icons";
 import styled, { css } from "styled-components";
-import Separator from "../Separator";
 
 export interface ToolBtnGroupBtnProps {
     icon?: IconType;
@@ -11,37 +10,32 @@ export interface ToolBtnGroupBtnProps {
 }
 
 export interface ToolBtnGroupProps {
-    idxInit?: number;
+    curIndex?: number;
     buttons: ToolBtnGroupBtnProps[];
 }
 
 export default memo((props: ToolBtnGroupProps) => {
-    const { idxInit = 0, buttons = [] } = props;
-    const [idxCur, setIdxCur] = useState(idxInit);
+    const { curIndex = 0, buttons = [] } = props;
+
     return (
         <Container>
             {buttons.map((btnProps, index, arr) => {
                 const { icon: Icon, name, onClick } = btnProps;
                 const clickHandler = () => {
-                    if (index !== idxCur) {
-                        setIdxCur(index);
+                    if (index !== curIndex) {
                         onClick && onClick();
                     }
                 };
                 return (
-                    <>
-                        <ToolBtn
-                            key={index}
-                            selected={index === idxCur}
-                            onClick={clickHandler}
-                        >
-                            {Icon && <Icon />}
-                            {name}
-                        </ToolBtn>
-                        {index < arr.length - 1 && (
-                            <Separator key={`sep_${index}`} padding={4} />
-                        )}
-                    </>
+                    <ToolBtn
+                        key={index}
+                        selected={index === curIndex}
+                        isNotLast={index !== arr.length - 1}
+                        onClick={clickHandler}
+                    >
+                        {Icon && <Icon />}
+                        {name}
+                    </ToolBtn>
                 );
             })}
         </Container>
@@ -49,7 +43,7 @@ export default memo((props: ToolBtnGroupProps) => {
 });
 
 const Container = styled.div`
-height: 32px;
+    height: 32px;
     border: 1px dashed lightgray;
     border-radius: 4px;
     display: flex;
@@ -57,9 +51,9 @@ height: 32px;
 `;
 
 const ToolBtn = styled.div.attrs(
-    {} as { disabled: boolean; selected: boolean }
+    {} as { disabled: boolean; selected: boolean, isNotLast: boolean }
 )`
-    width: 32px;
+    padding: 8px;
     display: flex;
     justify-content: center;
     align-items: center;
@@ -82,5 +76,8 @@ const ToolBtn = styled.div.attrs(
                   &:active {
                       background-color: white;
                   }
+              `}
+              ${props => props.isNotLast && css`
+                  border-right: 1px solid lightgray;
               `}
 `;

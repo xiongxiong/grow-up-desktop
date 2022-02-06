@@ -1,34 +1,64 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
+import { nanoid } from "nanoid";
 
-export interface Thing {
-  id: string,
-  name: string,
-  desp?: string,
+export interface Period {
   timeHead?: number,
   timeTail?: number,
 }
 
-export enum PeriodUnit {
+export enum CycleUnit {
   Year = "Year",
   Month = "Month",
+  Week = "Week",
   Day = "Day",
-  Hour = "Hour",
-  Minute = "Minute",
-  Second = "Second",
 }
 
-export interface Period {
+export interface CycleExecSpot {
+  month?: number,
+  week?: number,
+  day?: number,
+  hour?: number,
+  minute?: number,
+  second?: number,
+}
+
+export interface CyclePeriod {
+  timeHead?: CycleExecSpot,
+  timeTail?: CycleExecSpot,
+}
+
+export interface NewTask {
+  title: string,
+  period?: Period,
+  cycleUnit?: CycleUnit,
+  cyclePeriods?: CyclePeriod[],
+};
+
+export interface Task {
   id: string,
-  name: string,
-  length: number,
-  unit: PeriodUnit,
-  enabled: boolean,
-  things: Thing[],
+  cycleId?: string,
+  title: string,
+  period?: Period,
+  finishAt?: number,
+  removeAt?: number,
+  timeCreate: number,
+}
+
+export interface CycleTask {
+  cycleUnit: CycleUnit,
+  cyclePeriods?: CyclePeriod[],
+}
+
+export interface DayTask {
+  day: string,
+  todoTasks: Task[],
+  doneTasks: Task[],
 }
 
 const initialState = {
-  periods: [] as Period[],
-  todos: [] as Thing[],
+  tasks: [] as Task[],
+  nextTasks: [] as Task[],
+  cycleTasks: [] as CycleTask[],
 };
 
 type InitialState = typeof initialState;
@@ -37,44 +67,26 @@ export const slice = createSlice({
   name: "setting",
   initialState,
   reducers: {
-    periodCreate: (state, action: PayloadAction<Period>) => {
-      state.periods.push(action.payload);
+    taskCreate: (state, action: PayloadAction<NewTask>) => {
+      state.tasks.push({...action.payload, id: nanoid(), timeCreate: Date.now()});
     },
-    periodUpdate: (state, action: PayloadAction<Period>) => {
-      const idx = state.periods.findIndex(({id}) => id === action.payload.id);
+    taskUpdate: (state, action: PayloadAction<Task>) => {
+      const idx = state.tasks.findIndex(({id}) => id === action.payload.id);
       if (idx >= 0) {
-        state.periods[idx] = action.payload;
+        state.tasks[idx] = action.payload;
       }
     },
-    periodRemove: (state, action: PayloadAction<Period>) => {
-      const idx = state.periods.findIndex(({id}) => id === action.payload.id);
+    taskRemove: (state, action: PayloadAction<Task>) => {
+      const idx = state.tasks.findIndex(({id}) => id === action.payload.id);
       if (idx >= 0) {
-        state.periods.splice(idx, 1);
-      }
-    },
-    todoCreate: (state, action: PayloadAction<Thing>) => {
-      state.todos.push(action.payload);
-    },
-    todoUpdate: (state, action: PayloadAction<Thing>) => {
-      const idx = state.todos.findIndex(({id}) => id === action.payload.id);
-      if (idx >= 0) {
-        state.todos[idx] = action.payload;
-      }
-    },
-    todoRemove: (state, action: PayloadAction<Thing>) => {
-      const idx = state.todos.findIndex(({id}) => id === action.payload.id);
-      if (idx >= 0) {
-        state.todos.splice(idx, 1);
+        state.tasks.splice(idx, 1);
       }
     },
   }
 });
 
 export const {
-  periodCreate,
-  periodUpdate,
-  periodRemove,
-  todoCreate,
-  todoUpdate,
-  todoRemove,
+  taskCreate,
+  taskUpdate,
+  taskRemove,
 } = slice.actions;

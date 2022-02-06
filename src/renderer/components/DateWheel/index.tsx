@@ -10,12 +10,12 @@ export enum DateUnit {
 }
 
 export interface DateWheelProps {
-    unit: DateUnit;
-    curDate: Date;
+    unit?: DateUnit;
+    curDate?: Date;
 }
 
 export default memo((props: DateWheelProps) => {
-    const { unit, curDate = Date.now() } = props;
+    const { unit = DateUnit.Day, curDate = Date.now() } = props;
 
     return (
         <Container>

@@ -1,5 +1,6 @@
-import { applyMiddleware, combineReducers, createStore } from "@reduxjs/toolkit";
+import { applyMiddleware, combineReducers, compose, createStore } from "@reduxjs/toolkit";
 import logger from "redux-logger";
+import { autoRehydrate } from 'redux-phoenix';
 import {slice as sliceData} from "./data";
 import {slice as sliceSettings} from "./settings";
 
@@ -8,7 +9,7 @@ const reducer = combineReducers({
   settings: sliceSettings.reducer,
 });
 
-const store = createStore(reducer, applyMiddleware(logger));
+const store = createStore(reducer, compose(applyMiddleware(logger), autoRehydrate));
 
 export default store;
 

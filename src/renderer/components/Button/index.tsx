@@ -3,8 +3,7 @@ import styled, { css } from "styled-components";
 const ToolBtn = styled.div.attrs(
     {} as { disabled: boolean; selected: boolean }
 )`
-    width: 32px;
-    height: 32px;
+    height: 40px;
     display: flex;
     justify-content: center;
     align-items: center;
