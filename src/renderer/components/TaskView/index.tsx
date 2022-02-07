@@ -14,27 +14,31 @@ export default (props: TaskViewProps) => {
         (state: RootState) => state.settings.taskViewUnit
     );
 
+    const taskViewAnchor = useSelector(
+      (state: RootState) => state.settings.taskViewAnchor || Date.now()
+  );
+
     const taskViewFinished = useSelector(
         (state: RootState) => state.settings.taskViewFinished
     );
 
     const [todayTodoTasks, todayDoneTasks] = useSelector((state: RootState) =>
-        oneDayTasks(state.data.tasks, moment())
+        oneDayTasks(state.data.tasks, moment(taskViewAnchor))
     );
 
     const weekDayTasks: DayTask[] = useSelector((state: RootState) =>
         mulDayTasks(
             state.data.tasks,
-            moment().startOf("week"),
-            moment().endOf("week")
+            moment(taskViewAnchor).startOf("week"),
+            moment(taskViewAnchor).endOf("week")
         )
     );
 
     const monthDayTasks = useSelector((state: RootState) =>
         mulDayTasks(
             state.data.tasks,
-            moment().startOf("month"),
-            moment().endOf("month")
+            moment(taskViewAnchor).startOf("month"),
+            moment(taskViewAnchor).endOf("month")
         )
     );
 

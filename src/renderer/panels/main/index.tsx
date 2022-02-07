@@ -24,6 +24,7 @@ import TaskView from "renderer/components/TaskView";
 import { RootState } from "renderer/store";
 import {
     setSelectedTask,
+    setTaskViewAnchor,
     setTaskViewUnit,
     switchTaskViewFinished,
     TaskViewUnits,
@@ -96,6 +97,8 @@ export default () => {
         shutTaskDetail();
     };
 
+    const targetToCurrent = () => dispatch(setTaskViewAnchor(Date.now()));
+
     return (
         <Container>
             <ToolPanel>
@@ -121,7 +124,7 @@ export default () => {
                         curIndex={TaskViewUnits.indexOf(taskViewUnit)}
                         buttons={viewBtns}
                     />
-                    <ToolPanelBtn>
+                    <ToolPanelBtn onClick={targetToCurrent}>
                         <BiTargetLock />
                     </ToolPanelBtn>
                     <DateWheel />

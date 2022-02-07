@@ -14,7 +14,8 @@ export const TaskViewUnits = [
 
 const initialState = {
   taskViewUnit: TaskViewUnit.Day,
-  taskViewFinished: false,
+  taskViewAnchor: undefined as number | undefined, // 工具栏时间指示器指示的当前时间
+  taskViewFinished: false, // 是否查看已完成的任务
   selectedTaskId: undefined as string | undefined,
 };
 
@@ -27,6 +28,9 @@ export const slice = createSlice({
     setTaskViewUnit: (state, action: PayloadAction<TaskViewUnit>) => {
       state.taskViewUnit = action.payload;
     },
+    setTaskViewAnchor: (state, action: PayloadAction<number>) => {
+      state.taskViewAnchor = action.payload;
+    },
     switchTaskViewFinished: (state) => {
       state.taskViewFinished = !state.taskViewFinished;
     },
@@ -38,6 +42,7 @@ export const slice = createSlice({
 
 export const {
   setTaskViewUnit,
+  setTaskViewAnchor,
   switchTaskViewFinished,
   setSelectedTask,
 } = slice.actions;
