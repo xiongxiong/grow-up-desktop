@@ -4,24 +4,23 @@ import styled from "styled-components";
 import TaskItem from "../TaskItem";
 
 export interface TaskListProps {
-  tasks: Task[],
-};
+    tasks: Task[];
+}
 
 export default memo((props: TaskListProps) => {
-  const {tasks = []} = props;
+    const { tasks = [] } = props;
 
-  return (
-    <Container>
-      {tasks.map(task => (
-        <TaskItem key={task.id} task={task} />
-      ))}
-    </Container>
-  );
+    return (
+        <Container>
+            {tasks.map((task) => (
+                <TaskItem key={task.id} task={task} />
+            ))}
+        </Container>
+    );
 });
 
 const Container = styled.div`
-  display: flex;
-  flex-direction: column;
-  align-items: stretch;
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
 `;
-

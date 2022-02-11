@@ -1,7 +1,7 @@
 import moment, { Moment } from "moment";
 import { useSelector } from "react-redux";
 import { RootState } from "renderer/store";
-import { DayTask, Task } from "renderer/store/data";
+import { Cycle, DayTask, Task } from "renderer/store/data";
 import { TaskViewUnit } from "renderer/store/settings";
 import styled, { css } from "styled-components";
 import TaskDay from "../TaskDay";
@@ -23,14 +23,14 @@ export default (props: TaskViewProps) => {
     );
 
     const [todayTodoTasks, todayDoneTasks] = useSelector((state: RootState) =>
-        oneDayTasks(state.data.tasks, moment(taskViewAnchor))
+        theDayTasks(state.data.tasks, moment(taskViewAnchor))
     );
 
     const weekDayTasks: DayTask[] = useSelector((state: RootState) =>
         mulDayTasks(
             state.data.tasks,
             moment(taskViewAnchor).startOf("week"),
-            moment(taskViewAnchor).endOf("week")
+            moment(taskViewAnchor).endOf("week").add(1, "seconds")
         )
     );
 
@@ -38,7 +38,7 @@ export default (props: TaskViewProps) => {
         mulDayTasks(
             state.data.tasks,
             moment(taskViewAnchor).startOf("month"),
-            moment(taskViewAnchor).endOf("month")
+            moment(taskViewAnchor).endOf("month").add(1, "seconds")
         )
     );
 
@@ -74,31 +74,27 @@ export default (props: TaskViewProps) => {
     return <Container taskViewUnit={taskViewUnit}>{viewRender()}</Container>;
 };
 
-const oneDayTasks = (tasks: Task[], mo: Moment) => {
+const theDayTasks = (tasks: Task[], mo: Moment) => {
     const todoTasks: Task[] = [];
     const doneTasks: Task[] = [];
+    const theDayHead = mo.startOf("day").valueOf();
+    const theDayTail = mo.endOf("day").valueOf();
+    const todayHead = moment().startOf("day");
     tasks.forEach((task) => {
         const { period, finishAt, removeAt } = task;
         if (!removeAt) {
             let valid = false;
             if (period) {
                 const { timeHead, timeTail } = period;
-                const head = mo.startOf("day").valueOf();
-                const tail = mo.endOf("day").valueOf();
-                if (
-                    timeHead &&
-                    timeHead < tail &&
-                    timeTail &&
-                    timeTail > head
-                ) {
-                    valid = true;
-                }
+                valid = (timeHead ? timeHead <= theDayTail : true) && (timeTail ? timeTail >= theDayHead : true);
             } else {
-                valid = true;
+                valid = !mo.isBefore(todayHead);
             }
             if (valid) {
                 if (finishAt) {
-                    doneTasks.push(task);
+                    if (finishAt >= theDayHead && finishAt <= theDayTail) {
+                      doneTasks.push(task);
+                    }
                 } else {
                     todoTasks.push(task);
                 }
@@ -112,7 +108,7 @@ const mulDayTasks = (tasks: Task[], moHead: Moment, moTail: Moment) => {
     const dayTasks: DayTask[] = [];
     const moTemp = moHead;
     while (moTemp.isBefore(moTail)) {
-        const [todoTasks, doneTasks] = oneDayTasks(tasks, moTemp);
+        const [todoTasks, doneTasks] = theDayTasks(tasks, moTemp);
         dayTasks.push({
             day: moTemp.format("YYYY-MM-DD"),
             todoTasks,
@@ -121,6 +117,10 @@ const mulDayTasks = (tasks: Task[], moHead: Moment, moTail: Moment) => {
         moTemp.add(1, "days");
     }
     return dayTasks;
+};
+
+const futureTasks = (cycleTasks: Cycle[], moHead: Moment, moTail: Moment) => {
+
 };
 
 const Container = styled.div.attrs({} as { taskViewUnit: TaskViewUnit })`

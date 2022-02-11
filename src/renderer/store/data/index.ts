@@ -13,9 +13,16 @@ export enum CycleUnit {
   Day = "Day",
 }
 
-export interface CycleExecSpot {
+export const CycleUnits = [
+  CycleUnit.Year,
+  CycleUnit.Month,
+  CycleUnit.Week,
+  CycleUnit.Day,
+];
+
+export interface CycleSpot {
   month?: number,
-  week?: number,
+  weekday?: number,
   day?: number,
   hour?: number,
   minute?: number,
@@ -23,8 +30,8 @@ export interface CycleExecSpot {
 }
 
 export interface CyclePeriod {
-  timeHead?: CycleExecSpot,
-  timeTail?: CycleExecSpot,
+  spotHead?: CycleSpot,
+  spotTail?: CycleSpot,
 }
 
 export interface NewTask {
@@ -41,10 +48,10 @@ export interface Task {
   period?: Period,
   finishAt?: number,
   removeAt?: number,
-  timeCreate: number,
+  createAt: number,
 }
 
-export interface CycleTask {
+export interface Cycle {
   cycleUnit: CycleUnit,
   cyclePeriods?: CyclePeriod[],
 }
@@ -57,8 +64,8 @@ export interface DayTask {
 
 const initialState = {
   tasks: [] as Task[],
-  nextTasks: [] as Task[],
-  cycleTasks: [] as CycleTask[],
+  cycleTasks: [] as Task[],
+  cycles: [] as Cycle[],
 };
 
 type InitialState = typeof initialState;
@@ -68,12 +75,14 @@ export const slice = createSlice({
   initialState,
   reducers: {
     taskCreate: (state, action: PayloadAction<NewTask>) => {
-      state.tasks.push({...action.payload, id: nanoid(), timeCreate: Date.now()});
+      state.tasks.push({...action.payload, id: nanoid(), createAt: Date.now()});
     },
     taskUpdate: (state, action: PayloadAction<Task>) => {
       const idx = state.tasks.findIndex(({id}) => id === action.payload.id);
       if (idx >= 0) {
         state.tasks[idx] = action.payload;
+      } else {
+        state.tasks.push(action.payload);
       }
     },
     taskRemove: (state, action: PayloadAction<Task>) => {

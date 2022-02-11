@@ -4,31 +4,44 @@ import styled from "styled-components";
 import TaskList from "../TaskList";
 
 export interface TaskDayProps {
-  taskViewFinished: boolean,
-  dayTask: DayTask;
-};
+    taskViewFinished: boolean;
+    dayTask: DayTask;
+}
 
 export default memo((props: TaskDayProps) => {
-  const {taskViewFinished, dayTask: {day, todoTasks, doneTasks}} = props;
+    const {
+        taskViewFinished,
+        dayTask: { day, todoTasks, doneTasks },
+    } = props;
 
-  return (
-    <Container>
-      <Title>{day}</Title>
-      <TaskList tasks={taskViewFinished ? doneTasks : todoTasks} />
-    </Container>
-  );
+    return (
+        <Container>
+            <Title>{day}</Title>
+            <List>
+                <TaskList tasks={taskViewFinished ? doneTasks : todoTasks} />
+            </List>
+        </Container>
+    );
 });
 
 const Container = styled.div`
-  margin: 4px;
-  min-width: 400px;
-  background-color: lightcyan;
-  border-radius: 4px;
+    margin: 4px;
+    padding: 4px;
+    min-width: 400px;
+    border: 1px solid gray;
+    border-radius: 4px;
+    display: flex;
+    flex-direction: column;
 `;
 
 const Title = styled.div`
-  padding: 8px;
-  display: flex;
-  justify-content: center;
-  align-items: center;
+    padding: 8px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+`;
+
+const List = styled.div`
+    flex: 1;
+    overflow-y: auto;
 `;

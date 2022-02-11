@@ -31,7 +31,7 @@ export default (props: TaskItemProps) => {
 
 const Container = styled.div.attrs({} as { selected: boolean })`
     padding: 8px;
-    margin: 8px;
+    margin: 4px 8px 0px 8px;
     display: flex;
     flex-direction: column;
     align-items: stretch;

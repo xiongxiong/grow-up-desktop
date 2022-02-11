@@ -1,10 +1,10 @@
 import styled, { css } from "styled-components";
 
 const Separator = styled.div.attrs(
-    {} as { horizontal: boolean; padding: number; margin: number }
+    {} as { horizontal: boolean; padding: number; margin: number; color: string }
 )`
     align-self: stretch;
-    background-color: lightgray;
+    background-color: ${props => props.color || "lightgray"};
 
     ${(props) =>
         props.horizontal

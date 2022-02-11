@@ -1,17 +1,16 @@
-import styled, { css } from "styled-components";
+import styled from "styled-components";
 import {
     IoAddOutline,
     IoSearchOutline,
     IoCheckmarkDone,
 } from "react-icons/io5";
 import { BiTargetLock, BiRecycle } from "react-icons/bi";
-import { RiDeleteBin3Line } from "react-icons/ri";
 import { BsListTask } from "react-icons/bs";
 import ToolBtn from "renderer/components/ToolBtn";
 import ToolBtnGroup from "renderer/components/ToolBtnGroup";
 import DateWheel from "renderer/components/DateWheel";
 import { Dialog, SwipeableDrawer } from "@mui/material";
-import { useCallback, useState, ChangeEvent } from "react";
+import { useCallback, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import NewTask from "renderer/components/NewTask";
 import {
@@ -24,12 +23,12 @@ import TaskView from "renderer/components/TaskView";
 import { RootState } from "renderer/store";
 import {
     setSelectedTask,
-    setTaskViewAnchor,
+    setTaskViewAnchorToNow,
     setTaskViewUnit,
     switchTaskViewFinished,
     TaskViewUnits,
 } from "renderer/store/settings";
-import Button from "renderer/components/Button";
+import TaskDetail from "renderer/components/TaskDetail";
 
 export default () => {
     const dispatch = useDispatch();
@@ -68,36 +67,12 @@ export default () => {
 
     const shutTaskDetail = () => dispatch(setSelectedTask(undefined));
 
-    const onUpdateTaskTitle = (e: ChangeEvent<HTMLTextAreaElement>) => {
-        selectedTask &&
-            dispatch(
-                taskUpdate({ ...selectedTask, title: e.currentTarget.value })
-            );
+    const updateTask = (task: Task, shut: boolean) => {
+        dispatch(taskUpdate(task));
+        shut && shutTaskDetail();
     };
 
-    const onUpdateTaskFinishStatus = () => {
-        selectedTask &&
-            dispatch(
-                taskUpdate({
-                    ...selectedTask,
-                    finishAt: selectedTask.finishAt ? undefined : Date.now(),
-                })
-            );
-        shutTaskDetail();
-    };
-
-    const onUpdateTaskRemoveStatus = () => {
-        selectedTask &&
-            dispatch(
-                taskUpdate({
-                    ...selectedTask,
-                    removeAt: selectedTask.removeAt ? undefined : Date.now(),
-                })
-            );
-        shutTaskDetail();
-    };
-
-    const targetToCurrent = () => dispatch(setTaskViewAnchor(Date.now()));
+    const targetToCurrent = () => dispatch(setTaskViewAnchorToNow());
 
     return (
         <Container>
@@ -108,6 +83,10 @@ export default () => {
                     </ToolPanelBtn>
                 </ToolGroup>
                 <ToolGroup>
+                    <ToolBtnGroup
+                        curIndex={TaskViewUnits.indexOf(taskViewUnit)}
+                        buttons={viewBtns}
+                    />
                     <ToolPanelBtn
                         onClick={useCallback(
                             () => dispatch(switchTaskViewFinished()),
@@ -120,10 +99,6 @@ export default () => {
                             <BsListTask />
                         )}
                     </ToolPanelBtn>
-                    <ToolBtnGroup
-                        curIndex={TaskViewUnits.indexOf(taskViewUnit)}
-                        buttons={viewBtns}
-                    />
                     <ToolPanelBtn onClick={targetToCurrent}>
                         <BiTargetLock />
                     </ToolPanelBtn>
@@ -140,34 +115,18 @@ export default () => {
             </ToolPanel>
             <TaskView />
             <StatusPanel></StatusPanel>
-            <NewTaskDialog open={newTaskOpen}>
+            <Dialog open={newTaskOpen}>
                 <NewTask onCancel={shutNewTask} onSubmit={createNewTask} />
-            </NewTaskDialog>
+            </Dialog>
             <SwipeableDrawer
                 anchor="right"
                 open={selectedTask !== undefined}
                 onClose={shutTaskDetail}
                 onOpen={() => {}}
             >
-                <TaskDetail>
-                    <TaskDetailBtnGroup>
-                        <TaskDetailStatusSwitchBtn
-                            onClick={onUpdateTaskFinishStatus}
-                        >
-                            {selectedTask?.finishAt ? "Undone" : "Done"}
-                        </TaskDetailStatusSwitchBtn>
-                        <ToolBtn
-                            onClick={onUpdateTaskRemoveStatus}
-                            style={{ marginLeft: "4px" }}
-                        >
-                            <RiDeleteBin3Line />
-                        </ToolBtn>
-                    </TaskDetailBtnGroup>
-                    <TaskDetailTextArea
-                        value={selectedTask?.title}
-                        onChange={onUpdateTaskTitle}
-                    />
-                </TaskDetail>
+                {selectedTask && (
+                    <TaskDetail task={selectedTask} updateTask={updateTask} />
+                )}
             </SwipeableDrawer>
         </Container>
     );
@@ -204,32 +163,4 @@ const StatusPanel = styled.div`
     display: flex;
     align-items: center;
     font-size: x-small;
-`;
-
-const NewTaskDialog = styled(Dialog)`
-    display: flex;
-    flex-direction: column;
-    align-items: stretch;
-`;
-
-const TaskDetail = styled.div`
-    width: 400px;
-    padding: 4px;
-    display: flex;
-    flex-direction: column;
-    align-items: stretch;
-`;
-
-const TaskDetailBtnGroup = styled.div`
-    display: flex;
-`;
-
-const TaskDetailStatusSwitchBtn = styled(Button)`
-    flex: 1;
-    height: 32px;
-`;
-
-const TaskDetailTextArea = styled.textarea`
-    margin-top: 4px;
-    height: 120px;
 `;

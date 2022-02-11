@@ -31,6 +31,11 @@ export const slice = createSlice({
     setTaskViewAnchor: (state, action: PayloadAction<number>) => {
       state.taskViewAnchor = action.payload;
     },
+    setTaskViewAnchorToNow: (state) => {
+      state.taskViewUnit = TaskViewUnit.Day;
+      state.taskViewAnchor = Date.now();
+      state.taskViewFinished = false;
+    },
     switchTaskViewFinished: (state) => {
       state.taskViewFinished = !state.taskViewFinished;
     },
@@ -43,6 +48,7 @@ export const slice = createSlice({
 export const {
   setTaskViewUnit,
   setTaskViewAnchor,
+  setTaskViewAnchorToNow,
   switchTaskViewFinished,
   setSelectedTask,
 } = slice.actions;
