@@ -1,33 +1,8 @@
-import styled, { css } from "styled-components";
+import styled from "styled-components";
+import BasicBtn from "../BasicBtn";
 
-const ToolBtn = styled.div.attrs(
-    {} as { disabled: boolean; selected: boolean }
-)`
+export default styled(BasicBtn)`
     height: 40px;
-    display: flex;
-    justify-content: center;
-    align-items: center;
     border: 1px dashed lightgray;
     border-radius: 4px;
-
-    ${(props) =>
-        props.disabled
-            ? css`
-                  color: lightgray;
-              `
-            : props.selected
-            ? css`
-                  color: white;
-                  background-color: lightskyblue;
-              `
-            : css`
-                  &:hover {
-                      background-color: lightgray;
-                  }
-                  &:active {
-                      background-color: white;
-                  }
-              `}
 `;
-
-export { ToolBtn as default };

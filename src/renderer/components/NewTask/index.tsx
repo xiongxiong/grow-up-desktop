@@ -1,5 +1,5 @@
 import { nanoid } from "nanoid";
-import { KeyboardEvent, useReducer, useState } from "react";
+import { KeyboardEvent, useReducer } from "react";
 import { IoAddOutline } from "react-icons/io5";
 import { CycleUnit, CycleUnits, NewTask } from "renderer/store/data";
 import styled from "styled-components";
@@ -29,7 +29,7 @@ export default (props: NewTaskProps) => {
             switch (action.type) {
                 case "updateTitle":
                     // action as {type: string, payload: string};
-                    return { ...state, title: (action.payload as string) };
+                    return { ...state, title: action.payload as string };
                 case "updatePeriod":
                     // action as {type: string, payload: Peroid}
                     return { ...state, period: action.payload };
@@ -42,19 +42,25 @@ export default (props: NewTaskProps) => {
                     };
                 case "updateCyclePeriod":
                     // action as {type: string, payload: {index: number, cyclePeriod: CyclePeriod}}
+                    state.cyclePeriods?.splice(
+                        action.payload.index,
+                        1,
+                        action.payload.cyclePeriod
+                    );
                     return {
                         ...state,
-                        cyclePeriods: state.cyclePeriods?.splice(
-                            action.payload.index,
-                            1,
-                            action.payload.cyclePeriod
-                        ),
                     };
                 case "appendCyclePeriod":
                     // action as {type: string}
                     return {
                         ...state,
                         cyclePeriods: [...(state.cyclePeriods || []), {}],
+                    };
+                case "removeCyclePeriod":
+                    // action as {type: string, payload: {index: number}}
+                    state.cyclePeriods?.splice(action.payload.index, 1);
+                    return {
+                        ...state,
                     };
                 default:
                     return state;
@@ -76,85 +82,99 @@ export default (props: NewTaskProps) => {
 
     const cycleBtns = CycleUnits.map((name) => ({
         name,
-        onClick: () => dispatch({type: "updateCycleUnit", payload: name}),
+        onClick: () => dispatch({ type: "updateCycleUnit", payload: name }),
     }));
 
     const onTitleInputKeyPress = (e: KeyboardEvent) => {
         if (e.key === "Enter" && state.title.trim().length > 0) {
-          onSubmit(state);
+            onSubmit(state);
         }
     };
 
     return (
         <Container>
-            <NewTaskDialogGroup>
-                <Input
-                    placeholder="Title"
-                    onChange={(e) =>
-                        dispatch({
-                            type: "updateTitle",
-                            payload: e.currentTarget.value,
-                        })
-                    }
-                    onKeyPress={onTitleInputKeyPress}
-                />
-            </NewTaskDialogGroup>
-            <NewTaskDialogGroup>
-                <TaskPeriodView
-                    period={state.period}
-                    updatePeroid={(period) =>
-                        dispatch({ type: "updatePeriod", payload: period })
-                    }
-                />
-            </NewTaskDialogGroup>
-            <NewTaskDialogGroup>
-                <SwitchBtnGroup>
-                    <ToolBtnGroup
-                        curIndex={state.cycleUnit === undefined ? 0 : 1}
-                        buttons={runBtns}
+            <ContentArea>
+                <NewTaskDialogGroup>
+                    <Input
+                        placeholder="Title"
+                        onChange={(e) =>
+                            dispatch({
+                                type: "updateTitle",
+                                payload: e.currentTarget.value,
+                            })
+                        }
+                        onKeyPress={onTitleInputKeyPress}
                     />
-                    {state.cycleUnit && (
+                </NewTaskDialogGroup>
+                <NewTaskDialogGroup>
+                    <TaskPeriodView
+                        period={state.period}
+                        updatePeroid={(period) =>
+                            dispatch({ type: "updatePeriod", payload: period })
+                        }
+                    />
+                </NewTaskDialogGroup>
+                <NewTaskDialogGroup>
+                    <SwitchBtnGroup>
                         <ToolBtnGroup
-                            curIndex={CycleUnits.indexOf(state.cycleUnit)}
-                            buttons={cycleBtns}
+                            curIndex={state.cycleUnit === undefined ? 0 : 1}
+                            buttons={runBtns}
                         />
-                    )}
-                </SwitchBtnGroup>
-                {state.cycleUnit && (
-                    <RunCycleGroup>
-                        {state.cyclePeriods?.map(
-                            (cyclePeriod, index) =>
-                                state.cycleUnit && (
-                                    <CyclePeriodView
-                                        key={nanoid()}
-                                        cycleUnit={state.cycleUnit}
-                                        cyclePeriod={cyclePeriod}
-                                        updateCyclePeriod={(cyclePeriod) =>
-                                            dispatch({
-                                                type: "updateCyclePeriod",
-                                                payload: { index, cyclePeriod },
-                                            })
-                                        }
-                                    />
-                                )
+                        {state.cycleUnit && (
+                            <ToolBtnGroup
+                                curIndex={CycleUnits.indexOf(state.cycleUnit)}
+                                buttons={cycleBtns}
+                            />
                         )}
-                        <Button
-                            onClick={() =>
-                                dispatch({ type: "appendCyclePeriod" })
-                            }
-                        >
-                            <IoAddOutline />
-                        </Button>
-                    </RunCycleGroup>
-                )}
-            </NewTaskDialogGroup>
+                    </SwitchBtnGroup>
+                    {state.cycleUnit && (
+                        <RunCycleGroup>
+                            {state.cyclePeriods?.map(
+                                (cyclePeriod, index) =>
+                                    state.cycleUnit && (
+                                        <CyclePeriodView
+                                            key={nanoid()}
+                                            cycleUnit={state.cycleUnit}
+                                            cyclePeriod={cyclePeriod}
+                                            updateCyclePeriod={(cyclePeriod) =>
+                                                dispatch({
+                                                    type: "updateCyclePeriod",
+                                                    payload: {
+                                                        index,
+                                                        cyclePeriod,
+                                                    },
+                                                })
+                                            }
+                                            removeCyclePeriod={() =>
+                                                dispatch({
+                                                    type: "removeCyclePeriod",
+                                                    payload: { index },
+                                                })
+                                            }
+                                        />
+                                    )
+                            )}
+                            <Button
+                                onClick={() =>
+                                    dispatch({ type: "appendCyclePeriod" })
+                                }
+                            >
+                                <IoAddOutline />
+                            </Button>
+                        </RunCycleGroup>
+                    )}
+                </NewTaskDialogGroup>
+            </ContentArea>
             <Separator horizontal margin={8} padding={8} />
             <NewTaskDialogActionGroup>
                 <NewTaskDialogAction onClick={onCancel}>
                     取消
                 </NewTaskDialogAction>
                 <Separator margin={4} color="white" />
-                <NewTaskDialogAction disabled={state.title.trim().length === 0} onClick={() => onSubmit(state)}>
+                <NewTaskDialogAction
+                    disabled={state.title.trim().length === 0}
+                    onClick={() => onSubmit(state)}
+                >
                     提交
                 </NewTaskDialogAction>
             </NewTaskDialogActionGroup>
@@ -163,10 +183,18 @@ export default (props: NewTaskProps) => {
 };
 
 const Container = styled.div`
-    width: 600px;
+    width: 700px;
     display: flex;
     flex-direction: column;
     align-items: stretch;
+`;
+
+const ContentArea = styled.div`
+    height: 300px;
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    overflow-y: auto;
 `;
 
 const NewTaskDialogGroup = styled.div`
