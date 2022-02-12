@@ -9,12 +9,18 @@ import { BsListTask } from "react-icons/bs";
 import ToolBtn from "renderer/components/ToolBtn";
 import ToolBtnGroup from "renderer/components/ToolBtnGroup";
 import DateWheel from "renderer/components/DateWheel";
-import { Dialog, SwipeableDrawer } from "@mui/material";
-import { useCallback, useState } from "react";
-import { useDispatch, useSelector } from "react-redux";
-import NewTask from "renderer/components/NewTask";
 import {
-    NewTask as NewTaskData,
+    Dialog,
+    Snackbar,
+    Alert,
+    SwipeableDrawer,
+    AlertColor,
+} from "@mui/material";
+import { useCallback, useState, useReducer } from "react";
+import { useDispatch, useSelector } from "react-redux";
+import NewTaskView from "renderer/components/NewTask";
+import {
+    NewTask,
     Task,
     taskCreate,
     taskUpdate,
@@ -30,8 +36,40 @@ import {
 } from "renderer/store/settings";
 import TaskDetail from "renderer/components/TaskDetail";
 
+const initialTipState = {
+    open: false,
+    level: "warning" as AlertColor,
+    message: "",
+    duration: 3000,
+};
+
+type TipState = typeof initialTipState;
+
 export default () => {
     const dispatch = useDispatch();
+
+    const [tipState, tipDispatch] = useReducer(
+        (state: TipState, action: { type: string; payload?: any }) => {
+            switch (action.type) {
+                case "open":
+                    // action as {type: string, payload: {level: AlertColor, message: string, duration: number}}
+                    return {
+                        ...state,
+                        open: true,
+                        level: action.payload.level || state.level,
+                        message: action.payload.message || state.message,
+                        duration: action.payload.duration || state.duration,
+                    };
+                case "shut":
+                    return initialTipState;
+                default:
+                    return initialTipState;
+            }
+        },
+        initialTipState
+    );
+
+    const closeTip = () => tipDispatch({type: "shut"});
 
     const taskViewUnit = useSelector(
         (state: RootState) => state.settings.taskViewUnit
@@ -60,22 +98,52 @@ export default () => {
 
     const shutNewTask = () => setNewTaskOpen(false);
 
-    const createNewTask = (task: NewTaskData) => {
-        shutNewTask();
-        dispatch(taskCreate(task));
+    const validTask = (task: NewTask) => {
+      const {period: {timeHead, timeTail} = {}} = task;
+      if (timeHead && timeTail) {
+        if (timeHead > timeTail) {
+          tipDispatch({
+            type: "open",
+            payload: {
+              message: "Invalid period : timeHead should before timeTail",
+            }
+          });
+          return false;
+        }
+      }
+      return true;
+    };
+
+    const createNewTask = (task: NewTask) => {
+        if (validTask(task)) {
+          shutNewTask();
+          dispatch(taskCreate(task));
+        }
     };
 
     const shutTaskDetail = () => dispatch(setSelectedTask(undefined));
 
     const updateTask = (task: Task, shut: boolean) => {
-        dispatch(taskUpdate(task));
-        shut && shutTaskDetail();
+        if (validTask(task)) {
+          shut && shutTaskDetail();
+          dispatch(taskUpdate(task));
+        }
     };
 
     const targetToCurrent = () => dispatch(setTaskViewAnchorToNow());
 
     return (
         <Container>
+            <Snackbar
+                open={tipState.open}
+                onClose={closeTip}
+                anchorOrigin={{ vertical: "top", horizontal: "center" }}
+                autoHideDuration={3000}
+            >
+                <Alert severity={tipState.level} onClose={closeTip}>
+                    {tipState.message}
+                </Alert>
+            </Snackbar>
             <ToolPanel>
                 <ToolGroup>
                     <ToolPanelBtn onClick={openNewTask}>
@@ -115,8 +183,8 @@ export default () => {
             </ToolPanel>
             <TaskView />
             <StatusPanel></StatusPanel>
-            <Dialog open={newTaskOpen}>
-                <NewTask onCancel={shutNewTask} onSubmit={createNewTask} />
+            <Dialog maxWidth={false} open={newTaskOpen}>
+                <NewTaskView onCancel={shutNewTask} onSubmit={createNewTask} />
             </Dialog>
             <SwipeableDrawer
                 anchor="right"

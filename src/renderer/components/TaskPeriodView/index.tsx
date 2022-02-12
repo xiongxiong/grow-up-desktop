@@ -15,14 +15,14 @@ export default (props: TaskPeroidViewProps) => {
 
     const onChangeTimeHead = (e: ChangeEvent<HTMLInputElement>) =>
         updatePeroid({
-            timeHead: moment(e.currentTarget.value).valueOf(),
+            timeHead: e.currentTarget.value ? moment(e.currentTarget.value).valueOf() : undefined,
             timeTail,
         });
 
     const onChangeTimeTail = (e: ChangeEvent<HTMLInputElement>) =>
         updatePeroid({
             timeHead,
-            timeTail: moment(e.currentTarget.value).valueOf(),
+            timeTail: e.currentTarget.value ? moment(e.currentTarget.value).valueOf() : undefined,
         });
 
     return (

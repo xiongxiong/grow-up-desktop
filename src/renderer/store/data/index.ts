@@ -52,8 +52,13 @@ export interface Task {
 }
 
 export interface Cycle {
+  id: string,
+  title: string,
+  period?: Period,
   cycleUnit: CycleUnit,
   cyclePeriods?: CyclePeriod[],
+  removeAt?: number,
+  createAt: number,
 }
 
 export interface DayTask {
@@ -64,7 +69,6 @@ export interface DayTask {
 
 const initialState = {
   tasks: [] as Task[],
-  cycleTasks: [] as Task[],
   cycles: [] as Cycle[],
 };
 
@@ -75,7 +79,11 @@ export const slice = createSlice({
   initialState,
   reducers: {
     taskCreate: (state, action: PayloadAction<NewTask>) => {
-      state.tasks.push({...action.payload, id: nanoid(), createAt: Date.now()});
+      if (action.payload.cycleUnit) {
+        state.cycles.push({...action.payload, id: nanoid(), cycleUnit: action.payload.cycleUnit, createAt: Date.now()})
+      } else {
+        state.tasks.push({...action.payload, id: nanoid(), createAt: Date.now()});
+      }
     },
     taskUpdate: (state, action: PayloadAction<Task>) => {
       const idx = state.tasks.findIndex(({id}) => id === action.payload.id);
@@ -91,6 +99,12 @@ export const slice = createSlice({
         state.tasks.splice(idx, 1);
       }
     },
+    cycleUpdate: (state, action: PayloadAction<Cycle>) => {
+
+    },
+    cycleRemove: (state, action: PayloadAction<Cycle>) => {
+
+    }
   }
 });
 

@@ -1,7 +1,8 @@
 import moment, { Moment } from "moment";
+import { nanoid } from "nanoid";
 import { useSelector } from "react-redux";
 import { RootState } from "renderer/store";
-import { Cycle, DayTask, Task } from "renderer/store/data";
+import { Cycle, CycleUnit, DayTask, Task } from "renderer/store/data";
 import { TaskViewUnit } from "renderer/store/settings";
 import styled, { css } from "styled-components";
 import TaskDay from "../TaskDay";
@@ -15,20 +16,21 @@ export default (props: TaskViewProps) => {
     );
 
     const taskViewAnchor = useSelector(
-      (state: RootState) => state.settings.taskViewAnchor || Date.now()
-  );
+        (state: RootState) => state.settings.taskViewAnchor || Date.now()
+    );
 
     const taskViewFinished = useSelector(
         (state: RootState) => state.settings.taskViewFinished
     );
 
     const [todayTodoTasks, todayDoneTasks] = useSelector((state: RootState) =>
-        theDayTasks(state.data.tasks, moment(taskViewAnchor))
+        theDayTasks(state.data.tasks, state.data.cycles, moment(taskViewAnchor))
     );
 
     const weekDayTasks: DayTask[] = useSelector((state: RootState) =>
         mulDayTasks(
             state.data.tasks,
+            state.data.cycles,
             moment(taskViewAnchor).startOf("week"),
             moment(taskViewAnchor).endOf("week").add(1, "seconds")
         )
@@ -37,6 +39,7 @@ export default (props: TaskViewProps) => {
     const monthDayTasks = useSelector((state: RootState) =>
         mulDayTasks(
             state.data.tasks,
+            state.data.cycles,
             moment(taskViewAnchor).startOf("month"),
             moment(taskViewAnchor).endOf("month").add(1, "seconds")
         )
@@ -74,7 +77,7 @@ export default (props: TaskViewProps) => {
     return <Container taskViewUnit={taskViewUnit}>{viewRender()}</Container>;
 };
 
-const theDayTasks = (tasks: Task[], mo: Moment) => {
+const theDayTasks = (tasks: Task[], cycles: Cycle[], mo: Moment) => {
     const todoTasks: Task[] = [];
     const doneTasks: Task[] = [];
     const theDayHead = mo.startOf("day").valueOf();
@@ -83,20 +86,48 @@ const theDayTasks = (tasks: Task[], mo: Moment) => {
     tasks.forEach((task) => {
         const { period, finishAt, removeAt } = task;
         if (!removeAt) {
-            let valid = false;
-            if (period) {
-                const { timeHead, timeTail } = period;
-                valid = (timeHead ? timeHead <= theDayTail : true) && (timeTail ? timeTail >= theDayHead : true);
+            if (finishAt) {
+                if (finishAt >= theDayHead && finishAt <= theDayTail) {
+                    doneTasks.push(task);
+                }
             } else {
-                valid = !mo.isBefore(todayHead);
-            }
-            if (valid) {
-                if (finishAt) {
-                    if (finishAt >= theDayHead && finishAt <= theDayTail) {
-                      doneTasks.push(task);
-                    }
-                } else {
+                const { timeHead, timeTail } = period || {};
+                const valid =
+                    (timeHead
+                        ? timeHead <= theDayTail
+                        : !mo.isBefore(todayHead)) &&
+                    (timeTail ? timeTail >= theDayHead : true);
+                if (valid) {
                     todoTasks.push(task);
+                }
+            }
+        }
+    });
+    cycles.forEach((cycle) => {
+        const { id: cycleId, title, period, cyclePeriods, removeAt, cycleUnit } = cycle;
+        if (!removeAt) {
+            const { timeHead, timeTail } = period || {};
+            const valid =
+                (timeHead ? timeHead <= theDayTail : !mo.isBefore(todayHead)) &&
+                (timeTail ? timeTail >= theDayHead : true);
+            if (valid) {
+                switch (cycleUnit) {
+                    case CycleUnit.Day:
+                      (cyclePeriods || [{}]).map(cyclePeriod => {
+                        const {spotHead, spotTail} = cyclePeriod;
+                        return ({
+
+                        });
+                      });
+                        todoTasks.push({
+                            id: nanoid(),
+                            cycleId,
+                            title,
+                            createAt: Date.now(),
+                        });
+                        break;
+                    default:
+                        break;
                 }
             }
         }
@@ -104,11 +135,16 @@ const theDayTasks = (tasks: Task[], mo: Moment) => {
     return [todoTasks, doneTasks];
 };
 
-const mulDayTasks = (tasks: Task[], moHead: Moment, moTail: Moment) => {
+const mulDayTasks = (
+    tasks: Task[],
+    cycles: Cycle[],
+    moHead: Moment,
+    moTail: Moment
+) => {
     const dayTasks: DayTask[] = [];
     const moTemp = moHead;
     while (moTemp.isBefore(moTail)) {
-        const [todoTasks, doneTasks] = theDayTasks(tasks, moTemp);
+        const [todoTasks, doneTasks] = theDayTasks(tasks, cycles, moTemp);
         dayTasks.push({
             day: moTemp.format("YYYY-MM-DD"),
             todoTasks,
@@ -119,9 +155,7 @@ const mulDayTasks = (tasks: Task[], moHead: Moment, moTail: Moment) => {
     return dayTasks;
 };
 
-const futureTasks = (cycleTasks: Cycle[], moHead: Moment, moTail: Moment) => {
-
-};
+const futureTasks = (cycleTasks: Cycle[], moHead: Moment, moTail: Moment) => {};
 
 const Container = styled.div.attrs({} as { taskViewUnit: TaskViewUnit })`
     flex: 1;
