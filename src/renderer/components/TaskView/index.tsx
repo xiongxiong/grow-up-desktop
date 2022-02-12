@@ -3,7 +3,7 @@ import { nanoid } from "nanoid";
 import { useSelector } from "react-redux";
 import { RootState } from "renderer/store";
 import { Cycle, CycleUnit, DayTask, Task } from "renderer/store/data";
-import { TaskViewUnit } from "renderer/store/settings";
+import { TaskViewMode, TaskViewUnit } from "renderer/store/settings";
 import styled, { css } from "styled-components";
 import TaskDay from "../TaskDay";
 import TaskList from "../TaskList";
@@ -19,9 +19,13 @@ export default (props: TaskViewProps) => {
         (state: RootState) => state.settings.taskViewAnchor || Date.now()
     );
 
-    const taskViewFinished = useSelector(
-        (state: RootState) => state.settings.taskViewFinished
+    const taskViewFinish = useSelector(
+        (state: RootState) => state.settings.taskViewFinish
     );
+
+    const taskViewMode = useSelector((state: RootState) => state.settings.taskViewMode);
+
+    const cycles = useSelector((state: RootState) => state.data.cycles);
 
     const [todayTodoTasks, todayDoneTasks] = useSelector((state: RootState) =>
         theDayTasks(state.data.tasks, state.data.cycles, moment(taskViewAnchor))
@@ -45,31 +49,48 @@ export default (props: TaskViewProps) => {
         )
     );
 
+    const dropTasks = useSelector((state: RootState) => state.data.tasks.filter(task => task.removeAt));
+
     const viewRender = () => {
-        switch (taskViewUnit) {
-            case TaskViewUnit.Month:
-                return monthDayTasks.map((dayTask) => (
-                    <TaskDay
-                        key={dayTask.day}
-                        taskViewFinished={taskViewFinished}
-                        dayTask={dayTask}
-                    />
-                ));
-            case TaskViewUnit.Week:
-                return weekDayTasks.map((dayTask) => (
-                    <TaskDay
-                        key={dayTask.day}
-                        taskViewFinished={taskViewFinished}
-                        dayTask={dayTask}
-                    />
-                ));
-            case TaskViewUnit.Day:
+        switch (taskViewMode) {
+          case TaskViewMode.Common:
+            switch (taskViewUnit) {
+              case TaskViewUnit.Month:
+                  return monthDayTasks.map((dayTask) => (
+                      <TaskDay
+                          key={dayTask.day}
+                          taskViewFinished={taskViewFinish}
+                          dayTask={dayTask}
+                      />
+                  ));
+              case TaskViewUnit.Week:
+                  return weekDayTasks.map((dayTask) => (
+                      <TaskDay
+                          key={dayTask.day}
+                          taskViewFinished={taskViewFinish}
+                          dayTask={dayTask}
+                      />
+                  ));
+              case TaskViewUnit.Day:
+                  return (
+                      <TaskList
+                          tasks={
+                              taskViewFinish ? todayDoneTasks : todayTodoTasks
+                          }
+                      />
+                  );
+            }
+            case TaskViewMode.Circle:
+              return (
+                <TaskList
+                      tasks={cycles}
+                  />
+              );
+              case TaskViewMode.Giveup:
                 return (
-                    <TaskList
-                        tasks={
-                            taskViewFinished ? todayDoneTasks : todayTodoTasks
-                        }
-                    />
+                  <TaskList
+                      tasks={dropTasks}
+                  />
                 );
         }
     };
@@ -83,6 +104,36 @@ const theDayTasks = (tasks: Task[], cycles: Cycle[], mo: Moment) => {
     const theDayHead = mo.startOf("day").valueOf();
     const theDayTail = mo.endOf("day").valueOf();
     const todayHead = moment().startOf("day");
+    cycles.forEach((cycle) => {
+        const { id: cycleId, title, period, cyclePeriods, removeAt, cycleUnit } = cycle;
+        if (!removeAt) {
+            const { timeHead, timeTail } = period || {};
+            const valid =
+                (timeHead ? timeHead <= theDayTail : !mo.isBefore(todayHead)) &&
+                (timeTail ? timeTail >= theDayHead : true);
+            if (valid) {
+                switch (cycleUnit) {
+                    case CycleUnit.Day:
+                      (cyclePeriods || [{}]).map(cyclePeriod => {
+                        const {spotHead, spotTail} = cyclePeriod;
+                        return ({
+
+                        });
+                      });
+                        todoTasks.push({
+                            id: nanoid(),
+                            cycleId,
+                            virtual: true,
+                            title,
+                            createAt: Date.now(),
+                        });
+                        break;
+                    default:
+                        break;
+                }
+            }
+        }
+    });
     tasks.forEach((task) => {
         const { period, finishAt, removeAt } = task;
         if (!removeAt) {
@@ -103,34 +154,8 @@ const theDayTasks = (tasks: Task[], cycles: Cycle[], mo: Moment) => {
             }
         }
     });
-    cycles.forEach((cycle) => {
-        const { id: cycleId, title, period, cyclePeriods, removeAt, cycleUnit } = cycle;
-        if (!removeAt) {
-            const { timeHead, timeTail } = period || {};
-            const valid =
-                (timeHead ? timeHead <= theDayTail : !mo.isBefore(todayHead)) &&
-                (timeTail ? timeTail >= theDayHead : true);
-            if (valid) {
-                switch (cycleUnit) {
-                    case CycleUnit.Day:
-                      (cyclePeriods || [{}]).map(cyclePeriod => {
-                        const {spotHead, spotTail} = cyclePeriod;
-                        return ({
-
-                        });
-                      });
-                        todoTasks.push({
-                            id: nanoid(),
-                            cycleId,
-                            title,
-                            createAt: Date.now(),
-                        });
-                        break;
-                    default:
-                        break;
-                }
-            }
-        }
+    todoTasks.sort(({focus: a}, {focus: b}) => {
+      return a ? (b ? 0 : -1) : (b ? 1 : 0);
     });
     return [todoTasks, doneTasks];
 };
@@ -155,8 +180,6 @@ const mulDayTasks = (
     return dayTasks;
 };
 
-const futureTasks = (cycleTasks: Cycle[], moHead: Moment, moTail: Moment) => {};
-
 const Container = styled.div.attrs({} as { taskViewUnit: TaskViewUnit })`
     flex: 1;
     display: flex;
@@ -173,6 +196,7 @@ const Container = styled.div.attrs({} as { taskViewUnit: TaskViewUnit })`
             case TaskViewUnit.Day:
                 return css`
                     flex-direction: column;
+                    overflow-y: auto;
                 `;
         }
     }}

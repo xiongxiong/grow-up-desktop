@@ -4,7 +4,9 @@ import App from "./App";
 import store from "./store";
 import persistStore from 'redux-phoenix';
 
-persistStore(store).then((store: any) => {render(
+persistStore(store, {
+  blacklist: ["settings"]
+}).then((store: any) => {render(
   <Provider store={store}>
       <App />
   </Provider>,

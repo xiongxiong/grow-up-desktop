@@ -43,9 +43,11 @@ export interface NewTask {
 
 export interface Task {
   id: string,
-  cycleId?: string,
+  cycleId?: string, // 周期任务id
+  virtual?: boolean, // 是否根据周期任务自动生成
   title: string,
   period?: Period,
+  focus?: boolean, // 是否聚焦，聚焦任务排序优先
   finishAt?: number,
   removeAt?: number,
   createAt: number,

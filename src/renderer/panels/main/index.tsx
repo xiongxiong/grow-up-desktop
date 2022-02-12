@@ -6,8 +6,8 @@ import {
 } from "react-icons/io5";
 import { BiTargetLock, BiRecycle } from "react-icons/bi";
 import { BsListTask } from "react-icons/bs";
+import { AiOutlineDelete } from "react-icons/ai";
 import ToolBtn from "renderer/components/ToolBtn";
-import ToolBtnGroup from "renderer/components/ToolBtnGroup";
 import DateWheel from "renderer/components/DateWheel";
 import {
     Dialog,
@@ -16,23 +16,18 @@ import {
     SwipeableDrawer,
     AlertColor,
 } from "@mui/material";
-import { useCallback, useState, useReducer } from "react";
+import { useState, useReducer } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import NewTaskView from "renderer/components/NewTask";
-import {
-    NewTask,
-    Task,
-    taskCreate,
-    taskUpdate,
-} from "renderer/store/data";
+import { NewTask, Task, taskCreate, taskUpdate } from "renderer/store/data";
 import TaskView from "renderer/components/TaskView";
 import { RootState } from "renderer/store";
 import {
     setSelectedTask,
     setTaskViewAnchorToNow,
-    setTaskViewUnit,
-    switchTaskViewFinished,
-    TaskViewUnits,
+    switchTaskViewFinish,
+    switchTaskViewMode,
+    TaskViewMode,
 } from "renderer/store/settings";
 import TaskDetail from "renderer/components/TaskDetail";
 
@@ -69,28 +64,24 @@ export default () => {
         initialTipState
     );
 
-    const closeTip = () => tipDispatch({type: "shut"});
+    const closeTip = () => tipDispatch({ type: "shut" });
 
-    const taskViewUnit = useSelector(
-        (state: RootState) => state.settings.taskViewUnit
+    const taskViewFinish = useSelector(
+        (state: RootState) => state.settings.taskViewFinish
     );
 
-    const taskViewFinished = useSelector(
-        (state: RootState) => state.settings.taskViewFinished
+    const taskViewMode = useSelector(
+        (state: RootState) => state.settings.taskViewMode
     );
 
-    const selectedTask = useSelector((state: RootState) =>
-        state.settings.selectedTaskId
-            ? state.data.tasks.find(
-                  (task) => task.id === state.settings.selectedTaskId
-              )
-            : undefined
-    );
-
-    const viewBtns = TaskViewUnits.map((name) => ({
-        name,
-        onClick: () => dispatch(setTaskViewUnit(name)),
-    }));
+    const selectedTask = useSelector((state: RootState) => {
+        const theTask = state.settings.selectedTask;
+        return theTask
+            ? theTask.virtual
+                ? theTask
+                : state.data.tasks.find((task) => task.id === theTask.id)
+            : undefined;
+    });
 
     const [newTaskOpen, setNewTaskOpen] = useState(false);
 
@@ -99,25 +90,26 @@ export default () => {
     const shutNewTask = () => setNewTaskOpen(false);
 
     const validTask = (task: NewTask) => {
-      const {period: {timeHead, timeTail} = {}} = task;
-      if (timeHead && timeTail) {
-        if (timeHead > timeTail) {
-          tipDispatch({
-            type: "open",
-            payload: {
-              message: "Invalid period : timeHead should before timeTail",
+        const { period: { timeHead, timeTail } = {} } = task;
+        if (timeHead && timeTail) {
+            if (timeHead > timeTail) {
+                tipDispatch({
+                    type: "open",
+                    payload: {
+                        message:
+                            "Invalid period : timeHead should before timeTail",
+                    },
+                });
+                return false;
             }
-          });
-          return false;
         }
-      }
-      return true;
+        return true;
     };
 
     const createNewTask = (task: NewTask) => {
         if (validTask(task)) {
-          shutNewTask();
-          dispatch(taskCreate(task));
+            shutNewTask();
+            dispatch(taskCreate(task));
         }
     };
 
@@ -125,8 +117,9 @@ export default () => {
 
     const updateTask = (task: Task, shut: boolean) => {
         if (validTask(task)) {
-          shut && shutTaskDetail();
-          dispatch(taskUpdate(task));
+            const {focus, finishAt, removeAt} = task;
+            shut && shutTaskDetail();
+            dispatch(taskUpdate({...task, virtual: undefined, focus: (finishAt || removeAt) ? undefined : focus}));
         }
     };
 
@@ -145,39 +138,64 @@ export default () => {
                 </Alert>
             </Snackbar>
             <ToolPanel>
-                <ToolGroup>
-                    <ToolPanelBtn onClick={openNewTask}>
-                        <IoAddOutline />
-                    </ToolPanelBtn>
-                </ToolGroup>
-                <ToolGroup>
-                    <ToolBtnGroup
-                        curIndex={TaskViewUnits.indexOf(taskViewUnit)}
-                        buttons={viewBtns}
-                    />
-                    <ToolPanelBtn
-                        onClick={useCallback(
-                            () => dispatch(switchTaskViewFinished()),
-                            []
-                        )}
-                    >
-                        {taskViewFinished ? (
-                            <IoCheckmarkDone />
-                        ) : (
-                            <BsListTask />
-                        )}
-                    </ToolPanelBtn>
-                    <ToolPanelBtn onClick={targetToCurrent}>
-                        <BiTargetLock />
-                    </ToolPanelBtn>
-                    <DateWheel />
-                </ToolGroup>
+                {taskViewMode === TaskViewMode.Common ? (
+                    <>
+                        <ToolGroup>
+                            <ToolPanelBtn onClick={openNewTask}>
+                                <IoAddOutline />
+                            </ToolPanelBtn>
+                        </ToolGroup>
+                        <ToolGroup>
+                            <ToolPanelBtn
+                                selected={taskViewFinish}
+                                onClick={() => dispatch(switchTaskViewFinish())}
+                            >
+                                {taskViewFinish ? (
+                                    <IoCheckmarkDone />
+                                ) : (
+                                    <BsListTask />
+                                )}
+                            </ToolPanelBtn>
+                            <ToolPanelBtn onClick={targetToCurrent}>
+                                <BiTargetLock />
+                            </ToolPanelBtn>
+                            <DateWheel />
+                        </ToolGroup>
+                    </>
+                ) : (
+                    <ToolPanelSpring />
+                )}
                 <ToolGroup>
                     <ToolPanelBtn>
                         <IoSearchOutline />
                     </ToolPanelBtn>
-                    <ToolPanelBtn>
+                    <ToolPanelBtn
+                        selected={taskViewMode === TaskViewMode.Circle}
+                        onClick={() =>
+                            dispatch(
+                                switchTaskViewMode(
+                                    taskViewMode === TaskViewMode.Circle
+                                        ? TaskViewMode.Common
+                                        : TaskViewMode.Circle
+                                )
+                            )
+                        }
+                    >
                         <BiRecycle />
+                    </ToolPanelBtn>
+                    <ToolPanelBtn
+                        selected={taskViewMode === TaskViewMode.Giveup}
+                        onClick={() =>
+                            dispatch(
+                                switchTaskViewMode(
+                                    taskViewMode === TaskViewMode.Giveup
+                                        ? TaskViewMode.Common
+                                        : TaskViewMode.Giveup
+                                )
+                            )
+                        }
+                    >
+                        <AiOutlineDelete />
                     </ToolPanelBtn>
                 </ToolGroup>
             </ToolPanel>
@@ -218,6 +236,10 @@ const ToolPanel = styled.div`
 
 const ToolPanelBtn = styled(ToolBtn)`
     margin: 0px 4px;
+`;
+
+const ToolPanelSpring = styled.div`
+    flex: 1;
 `;
 
 const ToolGroup = styled.div`

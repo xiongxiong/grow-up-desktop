@@ -16,19 +16,17 @@ const ToolBtn = styled.div.attrs(
             ? css`
                   color: lightgray;
               `
-            : props.selected
-            ? css`
+            : props.selected &&
+              css`
                   color: white;
-                  background-color: lightskyblue;
-              `
-            : css`
-                  &:hover {
-                      background-color: lightgray;
-                  }
-                  &:active {
-                      background-color: white;
-                  }
+                  background-color: #02c39a;
               `}
+    &:hover {
+        opacity: 0.7;
+    }
+    &:active {
+        background-color: white;
+    }
 `;
 
 export { ToolBtn as default };

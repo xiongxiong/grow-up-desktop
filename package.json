@@ -237,6 +237,7 @@
     "electron-updater": "^4.6.5",
     "history": "^5.2.0",
     "immer": "^9.0.12",
+    "material-ui-popup-state": "^2.0.0",
     "memoize-one": "^6.0.0",
     "moment": "^2.29.1",
     "nanoid": "^3.2.0",

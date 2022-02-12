@@ -1,5 +1,6 @@
-import styled from "styled-components";
-import { RiDeleteBin3Line } from "react-icons/ri";
+import styled, { css } from "styled-components";
+import { RiDeleteBin3Line, RiLogoutCircleRLine } from "react-icons/ri";
+import {MdCenterFocusStrong} from "react-icons/md";
 import Button from "../Button";
 import ToolBtn from "../ToolBtn";
 import { Period, Task } from "renderer/store/data";
@@ -35,33 +36,81 @@ export default (props: TaskDetailProps) => {
             true
         );
 
+        const switchTaskFocusStatus = () =>
+        updateTask(
+            {
+                ...task,
+                focus: !task.focus,
+            },
+            false
+        );
+
     const updateTaskPeriod = (period: Period) => {
         updateTask(
-          {
-            ...task,
-            period: period,
-          }, false
+            {
+                ...task,
+                period: period,
+            },
+            false
         );
+    };
+
+    const restoreTask = () => {
+        updateTask({ ...task, removeAt: undefined }, true);
     };
 
     return (
         <Container>
-            <BtnGroup>
-                <StatusSwitchBtn onClick={updateTaskFinishStatus}>
-                    {task?.finishAt ? "Undone" : "Done"}
-                </StatusSwitchBtn>
-                <ToolBtn
-                    onClick={updateTaskRemoveStatus}
-                    style={{ marginLeft: "4px" }}
-                >
-                    <RiDeleteBin3Line />
-                </ToolBtn>
-            </BtnGroup>
-            <TextArea value={task?.title} onChange={updateTaskTitle} />
-            <TaskPeriodView
-                    period={task?.period}
-                    updatePeroid={updateTaskPeriod}
-                />
+            {task.removeAt ? (
+                <>
+                    <BtnGroup>
+                        <LargeBtn bgColor="#ff9f1c" onClick={restoreTask}>
+                            Restore
+                        </LargeBtn>
+                    </BtnGroup>
+                </>
+            ) : task.virtual ? (
+                <>
+                    <BtnGroup>
+                        <LargeBtn bgColor="#02c39a" onClick={restoreTask}>
+                            Done
+                        </LargeBtn>
+                        <SmallBtn bgColor="#ff1654">
+                            <RiLogoutCircleRLine />
+                        </SmallBtn>
+                    </BtnGroup>
+                </>
+            ) : (
+                <>
+                    <BtnGroup>
+                    <SmallBtn
+                            bgColor={task.focus ? "#457B9D" : "#ff9f1c"}
+                            onClick={switchTaskFocusStatus}
+                            style={{marginRight: "4px"}}
+                        >
+                            <MdCenterFocusStrong />
+                        </SmallBtn>
+                        <LargeBtn
+                            bgColor={task.finishAt ? "#ff9f1c" : "#02c39a"}
+                            onClick={updateTaskFinishStatus}
+                        >
+                            {task.finishAt ? "Undone" : "Done"}
+                        </LargeBtn>
+                        <SmallBtn
+                            bgColor="#ff1654"
+                            onClick={updateTaskRemoveStatus}
+                            style={{marginLeft: "4px"}}
+                        >
+                            <RiDeleteBin3Line />
+                        </SmallBtn>
+                    </BtnGroup>
+                    <TextArea value={task.title} onChange={updateTaskTitle} />
+                    <TaskPeriodView
+                        period={task.period}
+                        updatePeroid={updateTaskPeriod}
+                    />
+                </>
+            )}
         </Container>
     );
 };
@@ -78,9 +127,16 @@ const BtnGroup = styled.div`
     display: flex;
 `;
 
-const StatusSwitchBtn = styled(Button)`
+const SmallBtn = styled(ToolBtn).attrs({} as { bgColor: string })`
+    color: white;
+    background-color: ${(props) => props.bgColor};
+`;
+
+const LargeBtn = styled(Button).attrs({} as { bgColor: string })`
     flex: 1;
     height: 32px;
+    color: white;
+    background-color: ${(props) => props.bgColor};
 `;
 
 const TextArea = styled.textarea`

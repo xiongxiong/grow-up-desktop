@@ -1,10 +1,11 @@
 import { memo } from "react";
-import styled, { css } from "styled-components";
+import styled from "styled-components";
 import { BsChevronCompactLeft, BsChevronCompactRight } from "react-icons/bs";
 import { useDispatch, useSelector } from "react-redux";
 import { RootState } from "renderer/store";
-import { setTaskViewAnchor, TaskViewUnit } from "renderer/store/settings";
+import { setTaskViewAnchor, switchTaskViewUnit, TaskViewUnit } from "renderer/store/settings";
 import moment from "moment";
+import { Popover } from "@mui/material";
 
 export interface DateWheelProps {}
 
@@ -91,7 +92,7 @@ export default memo((props: DateWheelProps) => {
             <Btn onClick={anchorPrev}>
                 <BsChevronCompactLeft />
             </Btn>
-            <Label>{anchorText()}</Label>
+            <Label onClick={() => dispatch(switchTaskViewUnit())}>{anchorText()}</Label>
             <Btn onClick={anchorNext}>
                 <BsChevronCompactRight />
             </Btn>
@@ -112,16 +113,23 @@ const Btn = styled.div`
     align-items: center;
 
     &:hover {
-        background-color: lightskyblue;
+        background-color: #A8DADC;
     }
     &:active {
-        background-color: white;
+        opacity: 0.7;
     }
 `;
 
-const Label = styled.p`
+const Label = styled.div`
     width: 80px;
     padding: 0px 8px;
     font-size: small;
     text-align: center;
+    user-select: none;
+`;
+
+const Pop = styled(Popover)`
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
 `;

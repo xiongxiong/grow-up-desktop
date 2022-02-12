@@ -104,6 +104,7 @@ export default (props: NewTaskProps) => {
                             })
                         }
                         onKeyPress={onTitleInputKeyPress}
+                        autoFocus
                     />
                 </NewTaskDialogGroup>
                 <NewTaskDialogGroup>

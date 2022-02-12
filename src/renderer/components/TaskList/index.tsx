@@ -12,8 +12,8 @@ export default memo((props: TaskListProps) => {
 
     return (
         <Container>
-            {tasks.map((task) => (
-                <TaskItem key={task.id} task={task} />
+            {tasks.map((task, index, list) => (
+                <TaskItem key={task.id} task={task} isLast={index === list.length - 1} />
             ))}
         </Container>
     );
