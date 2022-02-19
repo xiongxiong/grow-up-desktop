@@ -5,11 +5,11 @@ import { useDispatch, useSelector } from "react-redux";
 import { RootState } from "renderer/store";
 import { setTaskViewAnchor, switchTaskViewUnit, TaskViewUnit } from "renderer/store/settings";
 import moment from "moment";
-import { Popover } from "@mui/material";
+import BasicBtn from "../BasicBtn";
 
 export interface DateWheelProps {}
 
-export default memo((props: DateWheelProps) => {
+export default (props: DateWheelProps) => {
     const dispatch = useDispatch();
 
     const taskViewUnit = useSelector(
@@ -98,26 +98,16 @@ export default memo((props: DateWheelProps) => {
             </Btn>
         </Container>
     );
-});
+};
 
 const Container = styled.div`
     display: flex;
     align-items: center;
 `;
 
-const Btn = styled.div`
+const Btn = styled(BasicBtn)`
     padding: 4px;
     border-radius: 2px;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-
-    &:hover {
-        background-color: #A8DADC;
-    }
-    &:active {
-        opacity: 0.7;
-    }
 `;
 
 const Label = styled.div`
@@ -126,10 +116,8 @@ const Label = styled.div`
     font-size: small;
     text-align: center;
     user-select: none;
-`;
 
-const Pop = styled(Popover)`
-    display: flex;
-    flex-direction: column;
-    align-items: stretch;
+    &:hover {
+      color: "#FF9F1C";
+    }
 `;

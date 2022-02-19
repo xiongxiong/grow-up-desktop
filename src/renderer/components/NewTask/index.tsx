@@ -1,18 +1,16 @@
 import { nanoid } from "nanoid";
 import { KeyboardEvent, useReducer } from "react";
 import { IoAddOutline } from "react-icons/io5";
-import { CycleUnit, CycleUnits, NewTask } from "renderer/store/data";
+import { NewTask } from "renderer/store/data";
 import styled from "styled-components";
 import Button from "../Button";
-import CyclePeriodView from "../CyclePeriodView";
+import CyclePeriodView from "../CyclePeriod";
 import Separator from "../Separator";
-import TaskPeriodView from "../TaskPeriodView";
-import ToolBtnGroup from "../ToolBtnGroup";
+import TaskPeriodView from "../TaskPeriod";
 
 const initialState: NewTask = {
     title: "",
     period: undefined,
-    cycleUnit: undefined,
     cyclePeriods: undefined,
 };
 
@@ -33,13 +31,6 @@ export default (props: NewTaskProps) => {
                 case "updatePeriod":
                     // action as {type: string, payload: Peroid}
                     return { ...state, period: action.payload };
-                case "updateCycleUnit":
-                    // action as {type: string, payload?: CycleUnit};
-                    return {
-                        ...state,
-                        cycleUnit: action.payload,
-                        cyclePeriods: undefined,
-                    };
                 case "updateCyclePeriod":
                     // action as {type: string, payload: {index: number, cyclePeriod: CyclePeriod}}
                     state.cyclePeriods?.splice(
@@ -61,6 +52,7 @@ export default (props: NewTaskProps) => {
                     state.cyclePeriods?.splice(action.payload.index, 1);
                     return {
                         ...state,
+                        cyclePeriods: state.cyclePeriods?.length ? state.cyclePeriods : undefined,
                     };
                 default:
                     return state;
@@ -68,22 +60,6 @@ export default (props: NewTaskProps) => {
         },
         initialState
     );
-
-    const taskCycleTypes = ["Single", "Cycle"];
-
-    const runBtns = taskCycleTypes.map((name) => ({
-        name,
-        onClick: () =>
-            dispatch({
-                type: "updateCycleUnit",
-                payload: name === "Cycle" ? CycleUnit.Day : undefined,
-            }),
-    }));
-
-    const cycleBtns = CycleUnits.map((name) => ({
-        name,
-        onClick: () => dispatch({ type: "updateCycleUnit", payload: name }),
-    }));
 
     const onTitleInputKeyPress = (e: KeyboardEvent) => {
         if (e.key === "Enter" && state.title.trim().length > 0) {
@@ -116,26 +92,11 @@ export default (props: NewTaskProps) => {
                     />
                 </NewTaskDialogGroup>
                 <NewTaskDialogGroup>
-                    <SwitchBtnGroup>
-                        <ToolBtnGroup
-                            curIndex={state.cycleUnit === undefined ? 0 : 1}
-                            buttons={runBtns}
-                        />
-                        {state.cycleUnit && (
-                            <ToolBtnGroup
-                                curIndex={CycleUnits.indexOf(state.cycleUnit)}
-                                buttons={cycleBtns}
-                            />
-                        )}
-                    </SwitchBtnGroup>
-                    {state.cycleUnit && (
                         <RunCycleGroup>
                             {state.cyclePeriods?.map(
                                 (cyclePeriod, index) =>
-                                    state.cycleUnit && (
                                         <CyclePeriodView
                                             key={nanoid()}
-                                            cycleUnit={state.cycleUnit}
                                             cyclePeriod={cyclePeriod}
                                             updateCyclePeriod={(cyclePeriod) =>
                                                 dispatch({
@@ -154,7 +115,7 @@ export default (props: NewTaskProps) => {
                                             }
                                         />
                                     )
-                            )}
+                            }
                             <Button
                                 onClick={() =>
                                     dispatch({ type: "appendCyclePeriod" })
@@ -163,7 +124,6 @@ export default (props: NewTaskProps) => {
                                 <IoAddOutline />
                             </Button>
                         </RunCycleGroup>
-                    )}
                 </NewTaskDialogGroup>
             </ContentArea>
             <Separator horizontal margin={8} padding={8} />
@@ -184,7 +144,7 @@ export default (props: NewTaskProps) => {
 };
 
 const Container = styled.div`
-    width: 700px;
+    min-width: 500px;
     display: flex;
     flex-direction: column;
     align-items: stretch;
@@ -207,12 +167,6 @@ const NewTaskDialogGroup = styled.div`
 const Input = styled.input`
     height: 40px;
     padding: 0px 8px;
-`;
-
-const SwitchBtnGroup = styled.div`
-    display: flex;
-    justify-content: space-between;
-    margin-bottom: 4px;
 `;
 
 const RunCycleGroup = styled.div``;

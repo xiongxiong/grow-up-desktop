@@ -2,7 +2,7 @@ import moment, { Moment } from "moment";
 import { nanoid } from "nanoid";
 import { useSelector } from "react-redux";
 import { RootState } from "renderer/store";
-import { Cycle, CycleUnit, DayTask, Task } from "renderer/store/data";
+import { Task, DayTask } from "renderer/store/data";
 import { TaskViewMode, TaskViewUnit } from "renderer/store/settings";
 import styled, { css } from "styled-components";
 import TaskDay from "../TaskDay";
@@ -98,39 +98,33 @@ export default (props: TaskViewProps) => {
     return <Container taskViewUnit={taskViewUnit}>{viewRender()}</Container>;
 };
 
-const theDayTasks = (tasks: Task[], cycles: Cycle[], mo: Moment) => {
+const theDayTasks = (tasks: Task[], cycles: Task[], mo: Moment) => {
     const todoTasks: Task[] = [];
     const doneTasks: Task[] = [];
     const theDayHead = mo.startOf("day").valueOf();
     const theDayTail = mo.endOf("day").valueOf();
     const todayHead = moment().startOf("day");
     cycles.forEach((cycle) => {
-        const { id: cycleId, title, period, cyclePeriods, removeAt, cycleUnit } = cycle;
+        const { id: cycleId, title, period, cyclePeriods, removeAt } = cycle;
         if (!removeAt) {
             const { timeHead, timeTail } = period || {};
             const valid =
                 (timeHead ? timeHead <= theDayTail : !mo.isBefore(todayHead)) &&
                 (timeTail ? timeTail >= theDayHead : true);
             if (valid) {
-                switch (cycleUnit) {
-                    case CycleUnit.Day:
-                      (cyclePeriods || [{}]).map(cyclePeriod => {
-                        const {spotHead, spotTail} = cyclePeriod;
-                        return ({
+              cyclePeriods?.map(cyclePeriod => {
+                // const {cycleHead, cycleTail} = cyclePeriod;
+                return ({
 
-                        });
-                      });
-                        todoTasks.push({
-                            id: nanoid(),
-                            cycleId,
-                            virtual: true,
-                            title,
-                            createAt: Date.now(),
-                        });
-                        break;
-                    default:
-                        break;
-                }
+                });
+              });
+                // todoTasks.push({
+                //     id: nanoid(),
+                //     cycleId,
+                //     virtual: true,
+                //     title,
+                //     createAt: Date.now(),
+                // });
             }
         }
     });
@@ -162,7 +156,7 @@ const theDayTasks = (tasks: Task[], cycles: Cycle[], mo: Moment) => {
 
 const mulDayTasks = (
     tasks: Task[],
-    cycles: Cycle[],
+    cycles: Task[],
     moHead: Moment,
     moTail: Moment
 ) => {

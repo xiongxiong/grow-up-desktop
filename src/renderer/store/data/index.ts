@@ -6,21 +6,7 @@ export interface Period {
   timeTail?: number,
 }
 
-export enum CycleUnit {
-  Year = "Year",
-  Month = "Month",
-  Week = "Week",
-  Day = "Day",
-}
-
-export const CycleUnits = [
-  CycleUnit.Year,
-  CycleUnit.Month,
-  CycleUnit.Week,
-  CycleUnit.Day,
-];
-
-export interface CycleSpot {
+export interface CycleHead {
   month?: number,
   weekday?: number,
   day?: number,
@@ -29,38 +15,56 @@ export interface CycleSpot {
   second?: number,
 }
 
+export enum CycleDuration {
+  TheYear = "TheYear",
+  TheMonth = "TheMonth",
+  TheWeek = "TheWeek",
+  TheDay = "TheDay",
+  OneYear = "OneYear",
+  OneMonth = "OneMonth",
+  OneWeek = "OneWeek",
+  OneDay = "OneDay",
+  Custom = "Custom",
+}
+
+export const CycleDurationList: CycleDuration[] = [
+  CycleDuration.TheDay,
+  CycleDuration.TheWeek,
+  CycleDuration.TheMonth,
+  CycleDuration.TheYear,
+  CycleDuration.OneDay,
+  CycleDuration.OneWeek,
+  CycleDuration.OneMonth,
+  CycleDuration.OneYear,
+  CycleDuration.Custom,
+];
+
+export interface CycleTail {
+  cycleDuration?: CycleDuration,
+  duration?: number, // 自定义任务持续时间
+}
+
 export interface CyclePeriod {
-  spotHead?: CycleSpot,
-  spotTail?: CycleSpot,
+  cycleHead?: CycleHead,
+  cycleTail?: CycleTail,
 }
 
 export interface NewTask {
   title: string,
   period?: Period,
-  cycleUnit?: CycleUnit,
-  cyclePeriods?: CyclePeriod[],
+  cyclePeriods?: CyclePeriod[], // 周期任务执行周期：undefined -- 普通任务；others -- 周期任务
 };
 
-export interface Task {
+export interface BasicTask extends NewTask {
   id: string,
-  cycleId?: string, // 周期任务id
-  virtual?: boolean, // 是否根据周期任务自动生成
-  title: string,
-  period?: Period,
-  focus?: boolean, // 是否聚焦，聚焦任务排序优先
-  finishAt?: number,
   removeAt?: number,
   createAt: number,
 }
 
-export interface Cycle {
-  id: string,
-  title: string,
-  period?: Period,
-  cycleUnit: CycleUnit,
-  cyclePeriods?: CyclePeriod[],
-  removeAt?: number,
-  createAt: number,
+export interface Task extends BasicTask {
+  cycleId?: string, // 周期任务id
+  focus?: boolean, // 是否聚焦，聚焦任务排序优先
+  finishAt?: number,
 }
 
 export interface DayTask {
@@ -71,7 +75,7 @@ export interface DayTask {
 
 const initialState = {
   tasks: [] as Task[],
-  cycles: [] as Cycle[],
+  cycles: [] as Task[],
 };
 
 type InitialState = typeof initialState;
@@ -81,32 +85,27 @@ export const slice = createSlice({
   initialState,
   reducers: {
     taskCreate: (state, action: PayloadAction<NewTask>) => {
-      if (action.payload.cycleUnit) {
-        state.cycles.push({...action.payload, id: nanoid(), cycleUnit: action.payload.cycleUnit, createAt: Date.now()})
+      if (action.payload.cyclePeriods) {
+        state.cycles.push({...action.payload, id: nanoid(), createAt: Date.now()})
       } else {
         state.tasks.push({...action.payload, id: nanoid(), createAt: Date.now()});
       }
     },
     taskUpdate: (state, action: PayloadAction<Task>) => {
-      const idx = state.tasks.findIndex(({id}) => id === action.payload.id);
-      if (idx >= 0) {
-        state.tasks[idx] = action.payload;
-      } else {
-        state.tasks.push(action.payload);
-      }
+      state.tasks = state.tasks.map((task) => task.id === action.payload.id ? action.payload : task);
     },
     taskRemove: (state, action: PayloadAction<Task>) => {
-      const idx = state.tasks.findIndex(({id}) => id === action.payload.id);
-      if (idx >= 0) {
-        state.tasks.splice(idx, 1);
-      }
+      state.tasks = state.tasks.filter(({id}) => id !== action.payload.id);
     },
-    cycleUpdate: (state, action: PayloadAction<Cycle>) => {
-
+    taskToCycle: (state, action: PayloadAction<Task>) => {
+      state.cycles.push({...action.payload, id: nanoid(), cycleId: undefined, focus: undefined, finishAt: undefined, removeAt: undefined});
     },
-    cycleRemove: (state, action: PayloadAction<Cycle>) => {
-
-    }
+    cycleUpdate: (state, action: PayloadAction<Task>) => {
+      state.cycles = state.cycles.map((cycle) => cycle.id === action.payload.id ? action.payload : cycle);
+    },
+    cycleRemove: (state, action: PayloadAction<Task>) => {
+      state.cycles = state.cycles.filter(({id}) => id !== action.payload.id);
+    },
   }
 });
 
@@ -114,4 +113,7 @@ export const {
   taskCreate,
   taskUpdate,
   taskRemove,
+  taskToCycle,
+  cycleUpdate,
+  cycleRemove,
 } = slice.actions;

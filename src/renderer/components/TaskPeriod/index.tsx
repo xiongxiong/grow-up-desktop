@@ -2,13 +2,14 @@ import moment from "moment";
 import { ChangeEvent } from "react";
 import { Period } from "renderer/store/data";
 import styled from "styled-components";
+import {CgSpaceBetweenV} from "react-icons/cg";
 
-export interface TaskPeroidViewProps {
+export interface TaskPeroidProps {
     period?: Period;
     updatePeroid: (period: Period) => void;
 }
 
-export default (props: TaskPeroidViewProps) => {
+export default (props: TaskPeroidProps) => {
     const { period: { timeHead, timeTail } = {}, updatePeroid } = props;
 
     const format = "yyyy-MM-DDTHH:mm";
@@ -36,7 +37,9 @@ export default (props: TaskPeroidViewProps) => {
             ) : (
                 <Input type="datetime-local" onChange={onChangeTimeHead} />
             )}
-            <Separator>-</Separator>
+            <Separator>
+              <CgSpaceBetweenV />
+            </Separator>
             {timeTail ? (
                 <Input
                     type="datetime-local"
@@ -52,16 +55,21 @@ export default (props: TaskPeroidViewProps) => {
 
 const Container = styled.div`
     display: flex;
+    flex-direction: column;
     justify-content: center;
-    align-items: center;
+    align-items: stretch;
+    padding: 8px 0px;
+    font-size: small;
 `;
 
 const Input = styled.input`
     flex: 1;
-    height: 40px;
     padding: 0px 8px;
 `;
 
-const Separator = styled.p`
-    margin: 0px 8px;
+const Separator = styled.div`
+    margin: 2px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
 `;

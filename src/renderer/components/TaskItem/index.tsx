@@ -16,7 +16,7 @@ export default (props: TaskItemProps) => {
     const dispatch = useDispatch();
 
     const selectedTask = useSelector(
-        (state: RootState) => state.settings.selectedTask
+        (state: RootState) => state.settings.selectedItem
     );
 
     const onClick = () => {

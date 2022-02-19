@@ -19,7 +19,13 @@ import {
 import { useState, useReducer } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import NewTaskView from "renderer/components/NewTask";
-import { NewTask, Task, taskCreate, taskUpdate } from "renderer/store/data";
+import {
+    Task,
+    cycleUpdate,
+    NewTask,
+    taskCreate,
+    taskUpdate,
+} from "renderer/store/data";
 import TaskView from "renderer/components/TaskView";
 import { RootState } from "renderer/store";
 import {
@@ -74,13 +80,27 @@ export default () => {
         (state: RootState) => state.settings.taskViewMode
     );
 
-    const selectedTask = useSelector((state: RootState) => {
-        const theTask = state.settings.selectedTask;
-        return theTask
-            ? theTask.virtual
-                ? theTask
-                : state.data.tasks.find((task) => task.id === theTask.id)
-            : undefined;
+    const selectedItem = useSelector((state: RootState) => {
+        switch (state.settings.taskViewMode) {
+            case TaskViewMode.Common:
+                const theTask = state.settings.selectedItem as Task;
+                return theTask
+                    ? theTask.cycleId
+                        ? theTask
+                        : state.data.tasks.find(
+                              (task) => task.id === theTask.id
+                          )
+                    : undefined;
+            case TaskViewMode.Circle:
+                const theCycle = state.settings.selectedItem as Task;
+                return theCycle
+                    ? state.data.cycles.find(
+                          (cycle) => cycle.id === theCycle.id
+                      )
+                    : undefined;
+            default:
+                return state.settings.selectedItem;
+        }
     });
 
     const [newTaskOpen, setNewTaskOpen] = useState(false);
@@ -113,13 +133,22 @@ export default () => {
         }
     };
 
-    const shutTaskDetail = () => dispatch(setSelectedTask(undefined));
+    const shutDetail = () => dispatch(setSelectedTask(undefined));
 
     const updateTask = (task: Task, shut: boolean) => {
         if (validTask(task)) {
-            const {focus, finishAt, removeAt} = task;
-            shut && shutTaskDetail();
-            dispatch(taskUpdate({...task, virtual: undefined, focus: (finishAt || removeAt) ? undefined : focus}));
+            shut && shutDetail();
+            if (task.cyclePeriods) {
+                dispatch(cycleUpdate(task));
+            } else {
+                const { focus, finishAt, removeAt } = task;
+                dispatch(
+                    taskUpdate({
+                        ...task,
+                        focus: finishAt || removeAt ? undefined : focus,
+                    })
+                );
+            }
         }
     };
 
@@ -159,7 +188,7 @@ export default () => {
                             <ToolPanelBtn onClick={targetToCurrent}>
                                 <BiTargetLock />
                             </ToolPanelBtn>
-                            <DateWheel />
+                            <TheDateWheel />
                         </ToolGroup>
                     </>
                 ) : (
@@ -201,17 +230,17 @@ export default () => {
             </ToolPanel>
             <TaskView />
             <StatusPanel></StatusPanel>
-            <Dialog maxWidth={false} open={newTaskOpen}>
+            <Dialog open={newTaskOpen}>
                 <NewTaskView onCancel={shutNewTask} onSubmit={createNewTask} />
             </Dialog>
             <SwipeableDrawer
                 anchor="right"
-                open={selectedTask !== undefined}
-                onClose={shutTaskDetail}
+                open={selectedItem !== undefined}
+                onClose={shutDetail}
                 onOpen={() => {}}
             >
-                {selectedTask && (
-                    <TaskDetail task={selectedTask} updateTask={updateTask} />
+                {selectedItem && (
+                    <TaskDetail task={selectedItem} updateTask={updateTask} />
                 )}
             </SwipeableDrawer>
         </Container>
@@ -236,6 +265,7 @@ const ToolPanel = styled.div`
 
 const ToolPanelBtn = styled(ToolBtn)`
     margin: 0px 4px;
+    background-color: ${(props) => props.bgColorNormal};
 `;
 
 const ToolPanelSpring = styled.div`
@@ -253,4 +283,8 @@ const StatusPanel = styled.div`
     display: flex;
     align-items: center;
     font-size: x-small;
+`;
+
+const TheDateWheel = styled(DateWheel)`
+    margin-left: 4px;
 `;

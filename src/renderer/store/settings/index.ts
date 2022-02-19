@@ -24,7 +24,7 @@ const initialState = {
     taskViewAnchor: undefined as number | undefined, // 工具栏时间指示器指示的当前时间
     taskViewFinish: false, // 是否查看已完成的任务
     taskViewMode: TaskViewMode.Common,
-    selectedTask: undefined as Task | undefined,
+    selectedItem: undefined as Task | undefined,
 };
 
 type InitialState = typeof initialState;
@@ -64,7 +64,7 @@ export const slice = createSlice({
             state.taskViewMode = action.payload;
         },
         setSelectedTask: (state, action: PayloadAction<Task | undefined>) => {
-            state.selectedTask = action.payload;
+            state.selectedItem = action.payload;
         },
     },
 });

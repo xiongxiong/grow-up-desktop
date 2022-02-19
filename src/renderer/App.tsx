@@ -1,6 +1,7 @@
 import { MemoryRouter as Router, Routes, Route } from "react-router-dom";
 import "./App.css";
-import Main from "./panels/main";
+import NewTask from "./components/NewTask";
+import Main from "./panels/Main";
 
 const App = () => {
     return (
