@@ -6,12 +6,14 @@ import styled from "styled-components";
 import Button from "../Button";
 import CyclePeriodView from "../CyclePeriod";
 import Separator from "../Separator";
+import TagInput from "../TagInput";
 import TaskPeriodView from "../TaskPeriod";
 
 const initialState: NewTask = {
     title: "",
     period: undefined,
     cyclePeriods: undefined,
+    tags: undefined,
 };
 
 export interface NewTaskProps {
@@ -54,6 +56,12 @@ export default (props: NewTaskProps) => {
                         ...state,
                         cyclePeriods: state.cyclePeriods?.length ? state.cyclePeriods : undefined,
                     };
+                case "updateTags":
+                    // action as {type: string, payload: TaskTag[]}
+                    return {
+                      ...state,
+                      tags: action.payload
+                    };
                 default:
                     return state;
             }
@@ -82,6 +90,9 @@ export default (props: NewTaskProps) => {
                         onKeyPress={onTitleInputKeyPress}
                         autoFocus
                     />
+                </NewTaskDialogGroup>
+                <NewTaskDialogGroup>
+                <TagInput tags={state.tags} updateTags={(tags) => dispatch({type: "updateTags", payload: tags})}/>
                 </NewTaskDialogGroup>
                 <NewTaskDialogGroup>
                     <TaskPeriodView

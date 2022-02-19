@@ -49,20 +49,25 @@ export default (props: TaskItemProps) => {
             <UpPanel></UpPanel>
             <DownPanel>
                 {task.cycleId && (
-                    <SignBox color="#ff9f1c">
+                    <SignBox selected={selectedTask?.id === task.id}>
                         <BiLogInCircle />
                     </SignBox>
                 )}
                 {task.timing &&
                     (task.timing.isTiming ? (
-                        <SignBox color="#ff9f1c">
+                        <SignBox selected={selectedTask?.id === task.id}>
                             <AiOutlineFieldTime />
                         </SignBox>
                     ) : (
-                        <SignBox color="#457B9D">
+                        <SignBox selected={selectedTask?.id === task.id}>
                             <MdTimerOff />
                         </SignBox>
                     ))}
+                {task.tags && (
+                    <TagBox selected={selectedTask?.id === task.id}>
+                        {task.tags.map(({ name }) => name).join(" ✧ ")}
+                    </TagBox>
+                )}
                 <TaskTitle finished={!!task.finishAt} removed={!!task.removeAt}>
                     {task.title}
                 </TaskTitle>
@@ -92,11 +97,11 @@ const Container = styled.div.attrs(
             ? css`
                   border-radius: 4px;
                   color: white;
-                  background-color: orange;
+                  background-color: #ff9f1c;
               `
             : props.focus &&
               css`
-                  color: orange;
+                  color: #ff9f1c;
               `}
 
     ${(props) =>
@@ -116,11 +121,23 @@ const DownPanel = styled.div`
     align-items: center;
 `;
 
-const SignBox = styled.div.attrs({} as { color: string })`
+const SignBox = styled.div.attrs({} as { selected: boolean })`
     margin: 0px 4px;
-    color: ${(props) => props.color};
+    color: ${(props) => (props.selected ? "white" : "#ff9f1c")};
     display: flex;
     align-items: center;
+`;
+
+const TagBox = styled.div.attrs({} as { selected: boolean })`
+    max-width: 120px;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    padding: 4px;
+    border-radius: 4px;
+    font-size: x-small;
+    color: ${(props) => (props.selected ? "#ff9f1c" : "white")};
+    background-color: ${(props) => (props.selected ? "white" : "#ff9f1c")};
 `;
 
 const TaskTitle = styled.div.attrs(

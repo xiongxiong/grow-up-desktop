@@ -55,16 +55,27 @@ export interface TaskTiming {
     total: number,
 }
 
+export interface TaskTag {
+    id: string,
+    name: string,
+}
+
+export interface TaskTagExtended extends TaskTag {
+    touchedAt: number,
+    touchedTimes: number,
+}
+
 export interface NewTask {
     title: string;
     period?: Period;
     cyclePeriods?: CyclePeriod[]; // 周期任务执行周期：undefined -- 普通任务；others -- 周期任务
+    tags?: TaskTag[];
 }
 
 export interface BasicTask extends NewTask {
     id: string;
-    removeAt?: number;
     createAt: number;
+    removeAt?: number;
 }
 
 export interface Task extends BasicTask {
@@ -72,6 +83,7 @@ export interface Task extends BasicTask {
     focus?: boolean; // 是否聚焦，聚焦任务排序优先
     finishAt?: number;
     timing?: TaskTiming; // 任务计时
+    tags?: TaskTag[];
 }
 
 export interface DayTask {
@@ -83,6 +95,8 @@ export interface DayTask {
 const initialState = {
     tasks: [] as Task[],
     cycles: [] as Task[],
+    tags: [] as TaskTagExtended[], // 最常使用排序
+    tagsLast: [] as TaskTagExtended[], // 最近使用排序
 };
 
 type InitialState = typeof initialState;
@@ -136,6 +150,20 @@ export const slice = createSlice({
                 ({ id }) => id !== action.payload.id
             );
         },
+        tagCreate: (state, action: PayloadAction<TaskTagExtended[]>) => {
+            state.tags.push(...action.payload);
+            state.tags.sort((tagA, tagB) => tagB.touchedTimes - tagA.touchedTimes);
+            state.tagsLast = [...action.payload, ...state.tagsLast];
+        },
+        tagUpdate: (state, action: PayloadAction<string>) => {
+            state.tags = state.tags.map(tag => tag.id === action.payload ? ({
+              ...tag,
+              touchedAt: Date.now(),
+              touchedTimes: tag.touchedTimes + 1,
+            }) : tag);
+            state.tags.sort((tagA, tagB) => tagB.touchedTimes - tagA.touchedTimes);
+            state.tagsLast.sort((tagA, tagB) => tagB.touchedAt - tagA.touchedAt);
+        },
     },
 });
 
@@ -146,4 +174,19 @@ export const {
     taskToCycle,
     cycleUpdate,
     cycleRemove,
+    tagCreate,
+    tagUpdate,
 } = slice.actions;
+
+export const getNewTags = (oldTags: TaskTagExtended[], tagStr: string) => {
+  const names = tagStr.split(/\s+/).filter(s => s.length > 0);
+  const oldNames = oldTags.map(({ name }) => name);
+  return names
+      .filter((name) => !oldNames.includes(name))
+      .map((name) => ({
+          id: nanoid(),
+          name,
+          touchedAt: Date.now(),
+          touchedTimes: 1,
+      }));
+};

@@ -6,7 +6,7 @@ import { IoAddOutline, IoCheckmarkDone } from "react-icons/io5";
 import { AiOutlineFieldTime } from "react-icons/ai";
 import Button from "../Button";
 import ToolBtn from "../ToolBtn";
-import { CyclePeriod, Period, Task } from "renderer/store/data";
+import { CyclePeriod, Period, Task, TaskTag } from "renderer/store/data";
 import { ChangeEvent } from "react";
 import TaskPeriodView from "../TaskPeriod";
 import CyclePeriodView from "../CyclePeriod";
@@ -14,6 +14,7 @@ import { BsListTask } from "react-icons/bs";
 import { nanoid } from "nanoid";
 import { useSelector } from "react-redux";
 import { RootState } from "renderer/store";
+import TagInput from "../TagInput";
 
 export interface TaskDetailProps {
     task: Task;
@@ -98,6 +99,16 @@ export default (props: TaskDetailProps) => {
             },
             false
         );
+    };
+
+    const updateTaskTags = (tags: TaskTag[]) => {
+      updateTask(
+        {
+          ...task,
+          tags
+        },
+        false
+      );
     };
 
     const appendCyclePeriod = () => {
@@ -201,6 +212,7 @@ export default (props: TaskDetailProps) => {
                         </SmallBtn>
                     </BtnGroup>
                     <TextArea value={task.title} onChange={updateTaskTitle} />
+                    <TagInput tags={task.tags} updateTags={updateTaskTags}/>
                     <TaskPeriodView
                         period={task.period}
                         updatePeroid={updateTaskPeriod}
@@ -267,7 +279,7 @@ export default (props: TaskDetailProps) => {
 };
 
 const Container = styled.div`
-    min-width: 500px;
+    width: 500px;
     padding: 4px;
     display: flex;
     flex-direction: column;
