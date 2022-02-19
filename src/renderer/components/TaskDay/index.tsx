@@ -4,13 +4,13 @@ import styled from "styled-components";
 import TaskList from "../TaskList";
 
 export interface TaskDayProps {
-    taskViewFinished: boolean;
+    showFinish: boolean;
     dayTask: DayTask;
 }
 
 export default memo((props: TaskDayProps) => {
     const {
-        taskViewFinished,
+        showFinish,
         dayTask: { day, todoTasks, doneTasks },
     } = props;
 
@@ -18,7 +18,7 @@ export default memo((props: TaskDayProps) => {
         <Container>
             <Title>{day}</Title>
             <List>
-                <TaskList tasks={taskViewFinished ? doneTasks : todoTasks} />
+                <TaskList tasks={showFinish ? doneTasks : todoTasks} />
             </List>
         </Container>
     );

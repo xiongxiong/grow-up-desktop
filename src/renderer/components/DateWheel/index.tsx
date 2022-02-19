@@ -3,7 +3,7 @@ import styled from "styled-components";
 import { BsChevronCompactLeft, BsChevronCompactRight } from "react-icons/bs";
 import { useDispatch, useSelector } from "react-redux";
 import { RootState } from "renderer/store";
-import { setTaskViewAnchor, switchTaskViewUnit, TaskViewUnit } from "renderer/store/settings";
+import { setTimeAnchor, switchViewUnit, ViewUnit } from "renderer/store/settings";
 import moment from "moment";
 import BasicBtn from "../BasicBtn";
 
@@ -12,34 +12,34 @@ export interface DateWheelProps {}
 export default (props: DateWheelProps) => {
     const dispatch = useDispatch();
 
-    const taskViewUnit = useSelector(
-        (state: RootState) => state.settings.taskViewUnit
+    const viewUnit = useSelector(
+        (state: RootState) => state.settings.viewUnit
     );
 
-    const taskViewAnchor = useSelector(
-        (state: RootState) => state.settings.taskViewAnchor || Date.now()
+    const timeAnchor = useSelector(
+        (state: RootState) => state.settings.timeAnchor || Date.now()
     );
 
     const anchorPrev = () => {
-        switch (taskViewUnit) {
-            case TaskViewUnit.Month:
+        switch (viewUnit) {
+            case ViewUnit.Month:
                 dispatch(
-                    setTaskViewAnchor(
-                        moment(taskViewAnchor).subtract(1, "months").valueOf()
+                    setTimeAnchor(
+                        moment(timeAnchor).subtract(1, "months").valueOf()
                     )
                 );
                 break;
-            case TaskViewUnit.Week:
+            case ViewUnit.Week:
                 dispatch(
-                    setTaskViewAnchor(
-                        moment(taskViewAnchor).subtract(1, "weeks").valueOf()
+                    setTimeAnchor(
+                        moment(timeAnchor).subtract(1, "weeks").valueOf()
                     )
                 );
                 break;
-            case TaskViewUnit.Day:
+            case ViewUnit.Day:
                 dispatch(
-                    setTaskViewAnchor(
-                        moment(taskViewAnchor).subtract(1, "days").valueOf()
+                    setTimeAnchor(
+                        moment(timeAnchor).subtract(1, "days").valueOf()
                     )
                 );
                 break;
@@ -49,25 +49,25 @@ export default (props: DateWheelProps) => {
     };
 
     const anchorNext = () => {
-        switch (taskViewUnit) {
-            case TaskViewUnit.Month:
+        switch (viewUnit) {
+            case ViewUnit.Month:
                 dispatch(
-                    setTaskViewAnchor(
-                        moment(taskViewAnchor).add(1, "months").valueOf()
+                    setTimeAnchor(
+                        moment(timeAnchor).add(1, "months").valueOf()
                     )
                 );
                 break;
-            case TaskViewUnit.Week:
+            case ViewUnit.Week:
                 dispatch(
-                    setTaskViewAnchor(
-                        moment(taskViewAnchor).add(1, "weeks").valueOf()
+                    setTimeAnchor(
+                        moment(timeAnchor).add(1, "weeks").valueOf()
                     )
                 );
                 break;
-            case TaskViewUnit.Day:
+            case ViewUnit.Day:
                 dispatch(
-                    setTaskViewAnchor(
-                        moment(taskViewAnchor).add(1, "days").valueOf()
+                    setTimeAnchor(
+                        moment(timeAnchor).add(1, "days").valueOf()
                     )
                 );
                 break;
@@ -77,13 +77,13 @@ export default (props: DateWheelProps) => {
     };
 
     const anchorText = () => {
-        switch (taskViewUnit) {
-            case TaskViewUnit.Month:
-                return moment(taskViewAnchor).format("YYYY-MM");
-            case TaskViewUnit.Week:
-                return moment(taskViewAnchor).format("YYYY, Wo");
+        switch (viewUnit) {
+            case ViewUnit.Month:
+                return moment(timeAnchor).format("YYYY-MM");
+            case ViewUnit.Week:
+                return moment(timeAnchor).format("YYYY, Wo");
             default:
-                return moment(taskViewAnchor).format("YYYY-MM-DD");
+                return moment(timeAnchor).format("YYYY-MM-DD");
         }
     };
 
@@ -92,7 +92,7 @@ export default (props: DateWheelProps) => {
             <Btn onClick={anchorPrev}>
                 <BsChevronCompactLeft />
             </Btn>
-            <Label onClick={() => dispatch(switchTaskViewUnit())}>{anchorText()}</Label>
+            <Label onClick={() => dispatch(switchViewUnit())}>{anchorText()}</Label>
             <Btn onClick={anchorNext}>
                 <BsChevronCompactRight />
             </Btn>

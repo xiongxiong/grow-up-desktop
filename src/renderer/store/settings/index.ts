@@ -1,29 +1,24 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 import { Task } from "../data";
 
-export enum TaskViewUnit {
+export enum ViewUnit {
     Month = "Month",
     Week = "Week",
     Day = "Day",
 }
 
-export const TaskViewUnits = [
-    TaskViewUnit.Month,
-    TaskViewUnit.Week,
-    TaskViewUnit.Day,
+export const ViewUnits = [
+    ViewUnit.Month,
+    ViewUnit.Week,
+    ViewUnit.Day,
 ];
 
-export enum TaskViewMode {
-    Common = "Common", // 查看待办和已办
-    Circle = "Circle", // 查看周期任务
-    Giveup = "Giveup", // 查看弃办
-}
-
 const initialState = {
-    taskViewUnit: TaskViewUnit.Day,
-    taskViewAnchor: undefined as number | undefined, // 工具栏时间指示器指示的当前时间
-    taskViewFinish: false, // 是否查看已完成的任务
-    taskViewMode: TaskViewMode.Common,
+    viewUnit: ViewUnit.Day,
+    timeAnchor: undefined as number | undefined, // 工具栏时间指示器指示的当前时间
+    showFinish: false, // 是否查看已完成的任务
+    showRemove: false, // 是否查看删除任务
+    showCycle: false, // 是否查看周期任务
     selectedItem: undefined as Task | undefined,
 };
 
@@ -33,35 +28,38 @@ export const slice = createSlice({
     name: "setting",
     initialState,
     reducers: {
-        setTaskViewUnit: (state, action: PayloadAction<TaskViewUnit>) => {
-            state.taskViewUnit = action.payload;
+        setViewUnit: (state, action: PayloadAction<ViewUnit>) => {
+            state.viewUnit = action.payload;
         },
-        switchTaskViewUnit: (state) => {
-            switch (state.taskViewUnit) {
-                case TaskViewUnit.Day:
-                    state.taskViewUnit = TaskViewUnit.Week;
+        switchViewUnit: (state) => {
+            switch (state.viewUnit) {
+                case ViewUnit.Day:
+                    state.viewUnit = ViewUnit.Week;
                     break;
-                case TaskViewUnit.Week:
-                    state.taskViewUnit = TaskViewUnit.Month;
+                case ViewUnit.Week:
+                    state.viewUnit = ViewUnit.Month;
                     break;
-                case TaskViewUnit.Month:
-                    state.taskViewUnit = TaskViewUnit.Day;
+                case ViewUnit.Month:
+                    state.viewUnit = ViewUnit.Day;
                     break;
             }
         },
-        setTaskViewAnchor: (state, action: PayloadAction<number>) => {
-            state.taskViewAnchor = action.payload;
+        setTimeAnchor: (state, action: PayloadAction<number>) => {
+            state.timeAnchor = action.payload;
         },
-        setTaskViewAnchorToNow: (state) => {
-            state.taskViewUnit = TaskViewUnit.Day;
-            state.taskViewAnchor = Date.now();
-            state.taskViewFinish = false;
+        setTimeAnchorToNow: (state) => {
+            state.viewUnit = ViewUnit.Day;
+            state.timeAnchor = Date.now();
+            state.showFinish = false;
         },
-        switchTaskViewFinish: (state) => {
-            state.taskViewFinish = !state.taskViewFinish;
+        switchShowFinish: (state) => {
+            state.showFinish = !state.showFinish;
         },
-        switchTaskViewMode: (state, action: PayloadAction<TaskViewMode>) => {
-            state.taskViewMode = action.payload;
+        switchShowRemove: (state) => {
+            state.showRemove = !state.showRemove;
+        },
+        switchShowCycle: (state) => {
+            state.showCycle = !state.showCycle;
         },
         setSelectedTask: (state, action: PayloadAction<Task | undefined>) => {
             state.selectedItem = action.payload;
@@ -70,11 +68,12 @@ export const slice = createSlice({
 });
 
 export const {
-    setTaskViewUnit,
-    switchTaskViewUnit,
-    setTaskViewAnchor,
-    setTaskViewAnchorToNow,
-    switchTaskViewFinish,
-    switchTaskViewMode,
+    setViewUnit,
+    switchViewUnit,
+    setTimeAnchor,
+    setTimeAnchorToNow,
+    switchShowFinish,
+    switchShowRemove,
+    switchShowCycle,
     setSelectedTask,
 } = slice.actions;

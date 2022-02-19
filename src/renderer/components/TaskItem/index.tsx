@@ -23,13 +23,25 @@ export default (props: TaskItemProps) => {
         dispatch(setSelectedTask(task));
     };
 
+    const timingText = (total: number = 0) => {
+        const totalSeconds = Math.floor(total / 1000);
+        const day = Math.floor(totalSeconds / 86400);
+        const hour = Math.floor((totalSeconds % 86400) / 3600);
+        const minute = Math.floor((totalSeconds % 3600) / 60);
+        const second = Math.floor(totalSeconds % 60);
+        return (
+            (day ? day + "天" : "") +
+            (hour ? hour + "小时" : "") +
+            (minute ? minute + "分" : "") +
+            (second ? second + "秒" : "")
+        );
+    };
+
     return (
         <Container
             isLast={isLast}
             selected={selectedTask?.id === task.id}
             focus={task.focus}
-            finished={!!task.finishAt}
-            removed={!!task.removeAt}
             onClick={onClick}
         >
             <UpPanel></UpPanel>
@@ -39,7 +51,12 @@ export default (props: TaskItemProps) => {
                         <BiLogInCircle />
                     </SignBox>
                 )}
-                <TaskTitle>{task.title}</TaskTitle>
+                <TaskTitle finished={!!task.finishAt} removed={!!task.removeAt}>
+                    {task.title}
+                </TaskTitle>
+                {task.finishAt && task.timing && (
+                    <TimingBox>{timingText(task.timing.total)}</TimingBox>
+                )}
             </DownPanel>
         </Container>
     );
@@ -49,8 +66,6 @@ const Container = styled.div.attrs(
     {} as {
         focus: boolean;
         selected: boolean;
-        finished: boolean;
-        removed: boolean;
         isLast: boolean;
     }
 )`
@@ -77,20 +92,6 @@ const Container = styled.div.attrs(
         css`
             border-bottom: 1px dashed lightgray;
         `}
-
-    ${(props) =>
-        props.finished &&
-        css`
-            color: #02c39a;
-            text-decoration: line-through;
-        `}
-
-    ${(props) =>
-        props.removed &&
-        css`
-            color: #e71d36;
-            text-decoration: line-through;
-        `}
 `;
 
 const UpPanel = styled.div`
@@ -110,6 +111,33 @@ const SignBox = styled.div`
     align-items: center;
 `;
 
-const TaskTitle = styled.div`
+const TaskTitle = styled.div.attrs(
+    {} as {
+        finished: boolean;
+        removed: boolean;
+    }
+)`
     margin: 8px 4px;
+    flex: 1;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+
+    ${(props) =>
+        props.finished &&
+        css`
+            color: #02c39a;
+            text-decoration: line-through;
+        `}
+
+    ${(props) =>
+        props.removed &&
+        css`
+            color: #e71d36;
+            text-decoration: line-through;
+        `}
+`;
+
+const TimingBox = styled.div`
+    font-size: smaller;
 `;

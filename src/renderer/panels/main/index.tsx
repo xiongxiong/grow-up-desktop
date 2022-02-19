@@ -30,10 +30,10 @@ import TaskView from "renderer/components/TaskView";
 import { RootState } from "renderer/store";
 import {
     setSelectedTask,
-    setTaskViewAnchorToNow,
-    switchTaskViewFinish,
-    switchTaskViewMode,
-    TaskViewMode,
+    setTimeAnchorToNow,
+    switchShowFinish,
+    switchShowRemove,
+    switchShowCycle,
 } from "renderer/store/settings";
 import TaskDetail from "renderer/components/TaskDetail";
 
@@ -72,34 +72,31 @@ export default () => {
 
     const closeTip = () => tipDispatch({ type: "shut" });
 
-    const taskViewFinish = useSelector(
-        (state: RootState) => state.settings.taskViewFinish
+    const showFinish = useSelector(
+        (state: RootState) => state.settings.showFinish
     );
 
-    const taskViewMode = useSelector(
-        (state: RootState) => state.settings.taskViewMode
+    const showRemove = useSelector(
+        (state: RootState) => state.settings.showRemove
+    );
+
+    const showCycle = useSelector(
+        (state: RootState) => state.settings.showCycle
     );
 
     const selectedItem = useSelector((state: RootState) => {
-        switch (state.settings.taskViewMode) {
-            case TaskViewMode.Common:
-                const theTask = state.settings.selectedItem as Task;
-                return theTask
-                    ? theTask.cycleId
-                        ? theTask
-                        : state.data.tasks.find(
-                              (task) => task.id === theTask.id
-                          )
-                    : undefined;
-            case TaskViewMode.Circle:
-                const theCycle = state.settings.selectedItem as Task;
-                return theCycle
-                    ? state.data.cycles.find(
-                          (cycle) => cycle.id === theCycle.id
-                      )
-                    : undefined;
-            default:
-                return state.settings.selectedItem;
+        if (state.settings.showCycle) {
+            const theCycle = state.settings.selectedItem as Task;
+            return theCycle
+                ? state.data.cycles.find((cycle) => cycle.id === theCycle.id)
+                : undefined;
+        } else {
+            const theTask = state.settings.selectedItem as Task;
+            return theTask
+                ? theTask.cycleId
+                    ? theTask
+                    : state.data.tasks.find((task) => task.id === theTask.id)
+                : undefined;
         }
     });
 
@@ -152,7 +149,7 @@ export default () => {
         }
     };
 
-    const targetToCurrent = () => dispatch(setTaskViewAnchorToNow());
+    const targetToCurrent = () => dispatch(setTimeAnchorToNow());
 
     return (
         <Container>
@@ -167,7 +164,7 @@ export default () => {
                 </Alert>
             </Snackbar>
             <ToolPanel>
-                {taskViewMode === TaskViewMode.Common ? (
+                {!showCycle && !showRemove ? (
                     <>
                         <ToolGroup>
                             <ToolPanelBtn onClick={openNewTask}>
@@ -176,10 +173,10 @@ export default () => {
                         </ToolGroup>
                         <ToolGroup>
                             <ToolPanelBtn
-                                selected={taskViewFinish}
-                                onClick={() => dispatch(switchTaskViewFinish())}
+                                selected={showFinish}
+                                onClick={() => dispatch(switchShowFinish())}
                             >
-                                {taskViewFinish ? (
+                                {showFinish ? (
                                     <IoCheckmarkDone />
                                 ) : (
                                     <BsListTask />
@@ -199,30 +196,14 @@ export default () => {
                         <IoSearchOutline />
                     </ToolPanelBtn>
                     <ToolPanelBtn
-                        selected={taskViewMode === TaskViewMode.Circle}
-                        onClick={() =>
-                            dispatch(
-                                switchTaskViewMode(
-                                    taskViewMode === TaskViewMode.Circle
-                                        ? TaskViewMode.Common
-                                        : TaskViewMode.Circle
-                                )
-                            )
-                        }
+                        selected={showCycle}
+                        onClick={() => dispatch(switchShowCycle())}
                     >
                         <BiRecycle />
                     </ToolPanelBtn>
                     <ToolPanelBtn
-                        selected={taskViewMode === TaskViewMode.Giveup}
-                        onClick={() =>
-                            dispatch(
-                                switchTaskViewMode(
-                                    taskViewMode === TaskViewMode.Giveup
-                                        ? TaskViewMode.Common
-                                        : TaskViewMode.Giveup
-                                )
-                            )
-                        }
+                        selected={showRemove}
+                        onClick={() => dispatch(switchShowRemove())}
                     >
                         <AiOutlineDelete />
                     </ToolPanelBtn>

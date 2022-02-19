@@ -1,17 +1,16 @@
 import styled, { css } from "styled-components";
 import { RiDeleteBin3Line, RiLogoutCircleRLine } from "react-icons/ri";
-import { MdCenterFocusStrong } from "react-icons/md";
+import { MdCenterFocusStrong, MdTimerOff } from "react-icons/md";
 import { TiArrowBackOutline } from "react-icons/ti";
-import { IoAddOutline } from "react-icons/io5";
+import { IoAddOutline, IoCheckmarkDone } from "react-icons/io5";
+import { AiOutlineFieldTime } from "react-icons/ai";
 import Button from "../Button";
 import ToolBtn from "../ToolBtn";
 import { CyclePeriod, Period, Task } from "renderer/store/data";
 import { ChangeEvent } from "react";
 import TaskPeriodView from "../TaskPeriod";
 import CyclePeriodView from "../CyclePeriod";
-import { IoCheckmarkDone } from "react-icons/io5";
 import { BsListTask } from "react-icons/bs";
-import { TaskViewMode } from "renderer/store/settings";
 import { nanoid } from "nanoid";
 import { useSelector } from "react-redux";
 import { RootState } from "renderer/store";
@@ -24,21 +23,36 @@ export interface TaskDetailProps {
 export default (props: TaskDetailProps) => {
     const { task, updateTask } = props;
 
-    const taskViewMode = useSelector(
-        (state: RootState) => state.settings.taskViewMode
+    const showRemove = useSelector(
+        (state: RootState) => state.settings.showRemove
+    );
+
+    const showCycle = useSelector(
+        (state: RootState) => state.settings.showCycle
     );
 
     const updateTaskTitle = (e: ChangeEvent<HTMLTextAreaElement>) =>
         updateTask({ ...task, title: e.currentTarget.value }, false);
 
-    const updateTaskFinishStatus = () =>
+    const updateTaskFinishStatus = () => {
+        const {
+            timing: { isTiming = false, start = 0, total = 0 } = {},
+        } = task;
         updateTask(
             {
                 ...task,
                 finishAt: task.finishAt ? undefined : Date.now(),
+                timing: task.timing
+                    ? {
+                          isTiming: false,
+                          start,
+                          total: isTiming ? total + Date.now() - start : total,
+                      }
+                    : undefined,
             },
             true
         );
+    };
 
     const updateTaskRemoveStatus = () =>
         updateTask(
@@ -57,6 +71,24 @@ export default (props: TaskDetailProps) => {
             },
             false
         );
+
+    const switchTaskTimingStatus = () => {
+        const {
+            timing: { isTiming = false, start = 0, total = 0 } = {},
+        } = task;
+        const now = Date.now();
+        updateTask(
+            {
+                ...task,
+                timing: {
+                    isTiming: !isTiming,
+                    start: isTiming ? start : now,
+                    total: isTiming ? total + now - start : total,
+                },
+            },
+            false
+        );
+    };
 
     const updateTaskPeriod = (period: Period) => {
         updateTask(
@@ -106,7 +138,7 @@ export default (props: TaskDetailProps) => {
         updateTask({ ...task, removeAt: undefined }, true);
     };
 
-    const detailCommon = () => {
+    const detailTask = () => {
         if (task.cycleId) {
             return (
                 <>
@@ -137,6 +169,19 @@ export default (props: TaskDetailProps) => {
                         >
                             <MdCenterFocusStrong />
                         </SmallBtn>
+                        <SmallBtn
+                            bgColor={
+                                task.timing?.isTiming ? "#457B9D" : "#ff9f1c"
+                            }
+                            onClick={switchTaskTimingStatus}
+                            style={{ marginRight: "4px" }}
+                        >
+                            {task.timing?.isTiming ? (
+                                <MdTimerOff />
+                            ) : (
+                                <AiOutlineFieldTime />
+                            )}
+                        </SmallBtn>
                         <LargeBtn
                             bgColor={task.finishAt ? "#ff9f1c" : "#02c39a"}
                             onClick={updateTaskFinishStatus}
@@ -165,7 +210,7 @@ export default (props: TaskDetailProps) => {
         }
     };
 
-    const detailCircle = () => {
+    const detailCycle = () => {
         return (
             <>
                 <BtnGroup>
@@ -182,15 +227,15 @@ export default (props: TaskDetailProps) => {
                     updatePeroid={updateTaskPeriod}
                 />
                 {task.cyclePeriods?.map((cyclePeriod, index) => (
-                        <CyclePeriodView
-                            key={nanoid()}
-                            cyclePeriod={cyclePeriod}
-                            updateCyclePeriod={(cyclePeriod) =>
-                                updateCyclePeriod(cyclePeriod, index)
-                            }
-                            removeCyclePeriod={() => removeCyclePeriod(index)}
-                        />
-                    ))}
+                    <CyclePeriodView
+                        key={nanoid()}
+                        cyclePeriod={cyclePeriod}
+                        updateCyclePeriod={(cyclePeriod) =>
+                            updateCyclePeriod(cyclePeriod, index)
+                        }
+                        removeCyclePeriod={() => removeCyclePeriod(index)}
+                    />
+                ))}
                 <Button onClick={appendCyclePeriod}>
                     <IoAddOutline />
                 </Button>
@@ -198,7 +243,7 @@ export default (props: TaskDetailProps) => {
         );
     };
 
-    const detailGiveup = () => {
+    const detailRemove = () => {
         return (
             <>
                 <BtnGroup>
@@ -211,15 +256,10 @@ export default (props: TaskDetailProps) => {
     };
 
     const renderDetail = () => {
-        switch (taskViewMode) {
-            case TaskViewMode.Common:
-                return detailCommon();
-            case TaskViewMode.Circle:
-                return detailCircle();
-            case TaskViewMode.Giveup:
-                return detailGiveup();
-            default:
-                return undefined;
+        if (showCycle) {
+            return showRemove ? detailRemove() : detailCycle();
+        } else {
+            return showRemove ? detailRemove() : detailTask();
         }
     };
 
