@@ -162,7 +162,7 @@ export const slice = createSlice({
               touchedTimes: tag.touchedTimes + 1,
             }) : tag);
             state.tags.sort((tagA, tagB) => tagB.touchedTimes - tagA.touchedTimes);
-            state.tagsLast.sort((tagA, tagB) => tagB.touchedAt - tagA.touchedAt);
+            state.tagsLast = state.tags.sort((tagA, tagB) => tagB.touchedAt - tagA.touchedAt);
         },
     },
 });

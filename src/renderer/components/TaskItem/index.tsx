@@ -133,8 +133,8 @@ const TagBox = styled.div.attrs({} as { selected: boolean })`
     overflow: hidden;
     white-space: nowrap;
     text-overflow: ellipsis;
-    padding: 4px;
-    border-radius: 4px;
+    padding: 2px 4px;
+    border-radius: 2px;
     font-size: x-small;
     color: ${(props) => (props.selected ? "#ff9f1c" : "white")};
     background-color: ${(props) => (props.selected ? "white" : "#ff9f1c")};
