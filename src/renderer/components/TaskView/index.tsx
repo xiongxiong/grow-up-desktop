@@ -153,8 +153,8 @@ const theDayTasks = (tasks: Task[], cycles: Task[], mo: Moment) => {
             }
         }
     });
-    todoTasks.sort(({ focus: a }, { focus: b }) => {
-        return a ? (b ? 0 : -1) : b ? 1 : 0;
+    todoTasks.sort(({ focus: focusA, createAt: createAtA }, { focus: focusB, createAt: createAtB }) => {
+        return focusA ? (focusB ? (createAtB - createAtA) : -1) : focusB ? 1 : (createAtB - createAtA);
     });
     return [todoTasks, doneTasks];
 };

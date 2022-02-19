@@ -4,6 +4,8 @@ import { Task } from "renderer/store/data";
 import { setSelectedTask } from "renderer/store/settings";
 import styled, { css } from "styled-components";
 import { BiLogInCircle } from "react-icons/bi";
+import { MdTimerOff } from "react-icons/md";
+import { AiOutlineFieldTime } from "react-icons/ai";
 
 export interface TaskItemProps {
     task: Task;
@@ -47,10 +49,20 @@ export default (props: TaskItemProps) => {
             <UpPanel></UpPanel>
             <DownPanel>
                 {task.cycleId && (
-                    <SignBox>
+                    <SignBox color="#ff9f1c">
                         <BiLogInCircle />
                     </SignBox>
                 )}
+                {task.timing &&
+                    (task.timing.isTiming ? (
+                        <SignBox color="#ff9f1c">
+                            <AiOutlineFieldTime />
+                        </SignBox>
+                    ) : (
+                        <SignBox color="#457B9D">
+                            <MdTimerOff />
+                        </SignBox>
+                    ))}
                 <TaskTitle finished={!!task.finishAt} removed={!!task.removeAt}>
                     {task.title}
                 </TaskTitle>
@@ -104,9 +116,9 @@ const DownPanel = styled.div`
     align-items: center;
 `;
 
-const SignBox = styled.div`
+const SignBox = styled.div.attrs({} as { color: string })`
     margin: 0px 4px;
-    color: #ff9f1c;
+    color: ${(props) => props.color};
     display: flex;
     align-items: center;
 `;
