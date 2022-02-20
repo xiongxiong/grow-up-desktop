@@ -1,5 +1,5 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
-import { Task } from "../data";
+import { Task, TaskTag } from "../data";
 
 export enum ViewUnit {
     Month = "Month",
@@ -7,11 +7,7 @@ export enum ViewUnit {
     Day = "Day",
 }
 
-export const ViewUnits = [
-    ViewUnit.Month,
-    ViewUnit.Week,
-    ViewUnit.Day,
-];
+export const ViewUnits = [ViewUnit.Month, ViewUnit.Week, ViewUnit.Day];
 
 const initialState = {
     viewUnit: ViewUnit.Day,
@@ -20,6 +16,10 @@ const initialState = {
     showRemove: false, // 是否查看删除任务
     showCycle: false, // 是否查看周期任务
     selectedItem: undefined as Task | undefined,
+    showSearch: false, // 是否进行搜索
+    showSearchTagBar: false, // 是否显示标签搜索工具条
+    searchTags: [] as TaskTag[],
+    searchString: "",
 };
 
 type InitialState = typeof initialState;
@@ -64,6 +64,34 @@ export const slice = createSlice({
         setSelectedTask: (state, action: PayloadAction<Task | undefined>) => {
             state.selectedItem = action.payload;
         },
+        switchShowSearch: (state) => {
+            if (state.showSearch) {
+                state.showSearchTagBar = false;
+                state.searchTags = [];
+                state.searchString = "";
+            }
+            state.showSearch = !state.showSearch;
+        },
+        switchShowSearchTagBar: (state) => {
+            state.showSearchTagBar = !state.showSearchTagBar;
+        },
+        appendSearchTags: (state, action: PayloadAction<TaskTag>) => {
+            if (
+                state.searchTags.findIndex(
+                    (tag) => tag.id === action.payload.id
+                ) === -1
+            ) {
+                state.searchTags = state.searchTags.concat([action.payload]);
+            }
+        },
+        removeSearchTags: (state, action: PayloadAction<TaskTag>) => {
+            state.searchTags = state.searchTags.filter(
+                (tag) => tag.id !== action.payload.id
+            );
+        },
+        updateSearchString: (state, action: PayloadAction<string>) => {
+            state.searchString = action.payload;
+        },
     },
 });
 
@@ -76,4 +104,9 @@ export const {
     switchShowRemove,
     switchShowCycle,
     setSelectedTask,
+    switchShowSearch,
+    switchShowSearchTagBar,
+    appendSearchTags,
+    removeSearchTags,
+    updateSearchString,
 } = slice.actions;

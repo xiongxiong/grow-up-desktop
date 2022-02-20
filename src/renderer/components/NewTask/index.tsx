@@ -155,7 +155,7 @@ export default (props: NewTaskProps) => {
 };
 
 const Container = styled.div`
-    min-width: 500px;
+    width: 500px;
     display: flex;
     flex-direction: column;
     align-items: stretch;

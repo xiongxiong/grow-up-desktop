@@ -28,6 +28,7 @@ export default (props: TaskTagProps) => {
 };
 
 const Container = styled.div.attrs({} as { showIcon: boolean })`
+    height: 14px;
     font-size: x-small;
     user-select: none;
     display: flex;

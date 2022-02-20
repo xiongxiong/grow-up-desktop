@@ -164,6 +164,9 @@ export const slice = createSlice({
             state.tags.sort((tagA, tagB) => tagB.touchedTimes - tagA.touchedTimes);
             state.tagsLast = state.tags.sort((tagA, tagB) => tagB.touchedAt - tagA.touchedAt);
         },
+        tagRemove: (state, action: PayloadAction<string>) => {
+            state.tags = state.tags.filter(tag => tag.id !== action.payload);
+        },
     },
 });
 
@@ -176,6 +179,7 @@ export const {
     cycleRemove,
     tagCreate,
     tagUpdate,
+    tagRemove,
 } = slice.actions;
 
 export const getNewTags = (oldTags: TaskTagExtended[], tagStr: string) => {

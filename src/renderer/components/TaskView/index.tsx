@@ -1,8 +1,7 @@
 import moment, { Moment } from "moment";
-import { nanoid } from "nanoid";
 import { useSelector } from "react-redux";
 import { RootState } from "renderer/store";
-import { Task, DayTask } from "renderer/store/data";
+import { Task, DayTask, TaskTag } from "renderer/store/data";
 import { ViewUnit } from "renderer/store/settings";
 import styled, { css } from "styled-components";
 import TaskDay from "../TaskDay";
@@ -29,11 +28,33 @@ export default (props: TaskViewProps) => {
         (state: RootState) => state.settings.showCycle
     );
 
-    const cycles = useSelector((state: RootState) => state.data.cycles);
-
-    const [todayTodoTasks, todayDoneTasks] = useSelector((state: RootState) =>
-        theDayTasks(state.data.tasks, state.data.cycles, moment(timeAnchor))
+    const showSearch = useSelector(
+        (state: RootState) => state.settings.showSearch
     );
+
+    const searchTags = useSelector(
+        (state: RootState) => state.settings.searchTags
+    );
+
+    const searchString = useSelector(
+        (state: RootState) => state.settings.searchString
+    );
+
+    const [todayTodoTasks, todayDoneTasks] = useSelector((state: RootState) => {
+        const [todoTasks, doneTasks] = theDayTasks(
+            state.data.tasks,
+            state.data.cycles,
+            moment(timeAnchor)
+        );
+        if (showSearch) {
+            return [
+                filterTasks(todoTasks, searchTags, searchString),
+                filterTasks(doneTasks, searchTags, searchString),
+            ];
+        } else {
+            return [todoTasks, doneTasks];
+        }
+    });
 
     const weekDayTasks: DayTask[] = useSelector((state: RootState) =>
         mulDayTasks(
@@ -53,13 +74,31 @@ export default (props: TaskViewProps) => {
         )
     );
 
-    const dropTasks = useSelector((state: RootState) =>
-        state.data.tasks.filter((task) => task.removeAt)
-    );
+    const dropTasks = useSelector((state: RootState) => {
+        const tasks = state.data.tasks.filter((task) => task.removeAt);
+        if (showSearch) {
+            return filterTasks(tasks, searchTags, searchString);
+        } else {
+            return tasks;
+        }
+    });
 
-    const dropCycles = useSelector((state: RootState) =>
-        state.data.cycles.filter((cycle) => cycle.removeAt)
-    );
+    const cycles = useSelector((state: RootState) => {
+        if (showSearch) {
+            return filterTasks(state.data.cycles, searchTags, searchString);
+        } else {
+            return state.data.cycles;
+        }
+    });
+
+    const dropCycles = useSelector((state: RootState) => {
+        const cycles = state.data.cycles.filter((cycle) => cycle.removeAt);
+        if (showSearch) {
+            return filterTasks(cycles, searchTags, searchString);
+        } else {
+            return cycles;
+        }
+    });
 
     const viewRender = () => {
         if (showCycle) {
@@ -153,9 +192,20 @@ const theDayTasks = (tasks: Task[], cycles: Task[], mo: Moment) => {
             }
         }
     });
-    todoTasks.sort(({ focus: focusA, createAt: createAtA }, { focus: focusB, createAt: createAtB }) => {
-        return focusA ? (focusB ? (createAtB - createAtA) : -1) : focusB ? 1 : (createAtB - createAtA);
-    });
+    todoTasks.sort(
+        (
+            { focus: focusA, createAt: createAtA },
+            { focus: focusB, createAt: createAtB }
+        ) => {
+            return focusA
+                ? focusB
+                    ? createAtB - createAtA
+                    : -1
+                : focusB
+                ? 1
+                : createAtB - createAtA;
+        }
+    );
     return [todoTasks, doneTasks];
 };
 
@@ -177,6 +227,27 @@ const mulDayTasks = (
         moTemp.add(1, "days");
     }
     return dayTasks;
+};
+
+const filterTasks = (
+    tasks: Task[],
+    searchTags: TaskTag[],
+    searchString: string
+) => {
+    let tempTasks = tasks;
+    if (searchString.trim().length > 0) {
+        tempTasks = tempTasks.filter(({ title }) =>
+            title.includes(searchString)
+        );
+    }
+    if (searchTags.length > 0) {
+        searchTags.forEach((tag) => {
+            tempTasks = tempTasks.filter(({ tags }) =>
+                tags?.map(({ id }) => id).includes(tag.id)
+            );
+        });
+    }
+    return tempTasks;
 };
 
 const Container = styled.div.attrs({} as { viewUnit: ViewUnit })`

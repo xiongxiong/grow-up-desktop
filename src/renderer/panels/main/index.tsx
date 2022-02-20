@@ -3,10 +3,13 @@ import {
     IoAddOutline,
     IoSearchOutline,
     IoCheckmarkDone,
+    IoPricetagsOutline,
 } from "react-icons/io5";
 import { BiTargetLock, BiRecycle } from "react-icons/bi";
 import { BsListTask } from "react-icons/bs";
 import { AiOutlineDelete } from "react-icons/ai";
+import { VscChromeClose } from "react-icons/vsc";
+import {GoSettings} from "react-icons/go";
 import ToolBtn from "renderer/components/ToolBtn";
 import DateWheel from "renderer/components/DateWheel";
 import {
@@ -34,23 +37,46 @@ import {
     switchShowFinish,
     switchShowRemove,
     switchShowCycle,
+    switchShowSearchTagBar,
+    removeSearchTags,
+    updateSearchString,
+    appendSearchTags,
+    switchShowSearch,
 } from "renderer/store/settings";
 import TaskDetail from "renderer/components/TaskDetail";
+import TaskTagView from "renderer/components/TaskTag";
+import SettingsDialog from "renderer/components/SettingsDialog";
 
-const initialTipState = {
+const initialMsgState = {
     open: false,
     level: "warning" as AlertColor,
     message: "",
     duration: 3000,
 };
 
-type TipState = typeof initialTipState;
+type MsgState = typeof initialMsgState;
 
 export default () => {
     const dispatch = useDispatch();
 
-    const [tipState, tipDispatch] = useReducer(
-        (state: TipState, action: { type: string; payload?: any }) => {
+    const showSearch = useSelector(
+        (state: RootState) => state.settings.showSearch
+    );
+
+    const showSearchTagBar = useSelector(
+        (state: RootState) => state.settings.showSearchTagBar
+    );
+
+    const searchTags = useSelector(
+        (state: RootState) => state.settings.searchTags
+    );
+
+    const searchString = useSelector(
+        (state: RootState) => state.settings.searchString
+    );
+
+    const [msgState, msgDispatch] = useReducer(
+        (state: MsgState, action: { type: string; payload?: any }) => {
             switch (action.type) {
                 case "open":
                     // action as {type: string, payload: {level: AlertColor, message: string, duration: number}}
@@ -62,15 +88,15 @@ export default () => {
                         duration: action.payload.duration || state.duration,
                     };
                 case "shut":
-                    return initialTipState;
+                    return initialMsgState;
                 default:
-                    return initialTipState;
+                    return initialMsgState;
             }
         },
-        initialTipState
+        initialMsgState
     );
 
-    const closeTip = () => tipDispatch({ type: "shut" });
+    const closeMsg = () => msgDispatch({ type: "shut" });
 
     const showFinish = useSelector(
         (state: RootState) => state.settings.showFinish
@@ -110,7 +136,7 @@ export default () => {
         const { period: { timeHead, timeTail } = {} } = task;
         if (timeHead && timeTail) {
             if (timeHead > timeTail) {
-                tipDispatch({
+                msgDispatch({
                     type: "open",
                     payload: {
                         message:
@@ -151,20 +177,52 @@ export default () => {
 
     const targetToCurrent = () => dispatch(setTimeAnchorToNow());
 
+    const mostTags = useSelector((state: RootState) => state.data.tags);
+
+    const [settingsOpen, setSettingsOpen] = useState(false);
+
     return (
         <Container>
             <Snackbar
-                open={tipState.open}
-                onClose={closeTip}
+                open={msgState.open}
+                onClose={closeMsg}
                 anchorOrigin={{ vertical: "top", horizontal: "center" }}
                 autoHideDuration={3000}
             >
-                <Alert severity={tipState.level} onClose={closeTip}>
-                    {tipState.message}
+                <Alert severity={msgState.level} onClose={closeMsg}>
+                    {msgState.message}
                 </Alert>
             </Snackbar>
             <ToolPanel>
-                {!showCycle && !showRemove ? (
+                {showSearch ? (
+                    <SearchingArea>
+                        <ToolPanelBtn
+                            selected={showSearchTagBar}
+                            onClick={() => dispatch(switchShowSearchTagBar())}
+                        >
+                            <IoPricetagsOutline />
+                        </ToolPanelBtn>
+                        <TagsBox>
+                            {searchTags.map((tag) => (
+                                <TaskTagView
+                                    key={tag.id}
+                                    tag={tag}
+                                    showIcon
+                                    onClick={(t) =>
+                                        dispatch(removeSearchTags(t))
+                                    }
+                                />
+                            ))}
+                        </TagsBox>
+                        <Input
+                            onChange={(e) =>
+                                dispatch(
+                                    updateSearchString(e.currentTarget.value)
+                                )
+                            }
+                        />
+                    </SearchingArea>
+                ) : !showCycle && !showRemove ? (
                     <>
                         <ToolGroup>
                             <ToolPanelBtn onClick={openNewTask}>
@@ -189,11 +247,11 @@ export default () => {
                         </ToolGroup>
                     </>
                 ) : (
-                    <ToolPanelSpring />
+                    <SpringBox />
                 )}
                 <ToolGroup>
-                    <ToolPanelBtn>
-                        <IoSearchOutline />
+                    <ToolPanelBtn onClick={() => dispatch(switchShowSearch())}>
+                        {showSearch ? <VscChromeClose /> : <IoSearchOutline />}
                     </ToolPanelBtn>
                     <ToolPanelBtn
                         selected={showCycle}
@@ -207,12 +265,31 @@ export default () => {
                     >
                         <AiOutlineDelete />
                     </ToolPanelBtn>
+                    {!showSearch && !showCycle && !showRemove && <ToolPanelBtn
+                        onClick={() => setSettingsOpen(true)}
+                    >
+                        <GoSettings />
+                    </ToolPanelBtn>}
                 </ToolGroup>
             </ToolPanel>
+            {showSearchTagBar && (
+                <TagsPanel>
+                    {mostTags.map((tag) => (
+                        <TaskTagView
+                            key={tag.id}
+                            tag={tag}
+                            onClick={(t) => dispatch(appendSearchTags(t))}
+                        />
+                    ))}
+                </TagsPanel>
+            )}
             <TaskView />
             <StatusPanel></StatusPanel>
             <Dialog open={newTaskOpen}>
                 <NewTaskView onCancel={shutNewTask} onSubmit={createNewTask} />
+            </Dialog>
+            <Dialog open={settingsOpen} onBackdropClick={() => setSettingsOpen(false)}>
+                <SettingsDialog />
             </Dialog>
             <SwipeableDrawer
                 anchor="right"
@@ -236,7 +313,8 @@ const Container = styled.div`
 `;
 
 const ToolPanel = styled.div`
-    padding: 4px;
+    height: 40px;
+    padding: 0px 4px;
     background-color: #f7f5f1;
     border-bottom: 1px solid lightgray;
     display: flex;
@@ -244,13 +322,44 @@ const ToolPanel = styled.div`
     align-items: center;
 `;
 
+const TagsPanel = styled.div`
+    height: 40px;
+    display: flex;
+    align-items: center;
+    overflow-x: auto;
+    padding: 0px 6px;
+    background-color: #f7f5f1;
+`;
+
 const ToolPanelBtn = styled(ToolBtn)`
     margin: 0px 4px;
     background-color: ${(props) => props.bgColorNormal};
 `;
 
-const ToolPanelSpring = styled.div`
+const SearchingArea = styled.div`
     flex: 1;
+    display: flex;
+    align-items: center;
+`;
+
+const TagsBox = styled.div`
+    display: flex;
+    overflow: hidden;
+`;
+
+const Input = styled.input`
+    flex: 1;
+    padding: 0px 8px;
+    margin: 0px 4px;
+    height: 32px;
+    min-width: 40%;
+    border: none;
+    border-radius: 4px;
+    background-color: white;
+
+    &:focus {
+        outline: none;
+    }
 `;
 
 const ToolGroup = styled.div`
@@ -268,4 +377,8 @@ const StatusPanel = styled.div`
 
 const TheDateWheel = styled(DateWheel)`
     margin-left: 4px;
+`;
+
+const SpringBox = styled.div`
+    flex: 1;
 `;
